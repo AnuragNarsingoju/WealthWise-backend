@@ -1,6 +1,5 @@
 let mongoose = require('mongoose');
 
-
 let signup = new mongoose.Schema({
     "name": String,
     "phone": String,
@@ -15,31 +14,29 @@ let signup = new mongoose.Schema({
     timestamps: true 
 });
 
-
-
-let formDataSchema = new mongoose.Schema({
-  email: { type: String , unique: true},
-  income: { type: String },
-  age: { type: String },
-  city: { type: String },
-  foodAtHome: { type: String },
-  foodAwayFromHome: { type: String },
-  housing: { type: String },
-  transportation: { type: String },
-  healthcare: { type: String },
-  education: { type: String },
-  entertainment: { type: String },
-  personalCare: { type: String },
-  apparelAndServices: { type: String },
-  tobaccoProducts: { type: String },
-  cashContributions: { type: String },
-  alcoholicBeverages: { type: String },
-  savings: { type: String }
-}, {
-  timestamps: true
+let UserDataSchema = new mongoose.Schema({
+    email: { type: String, required: true },
+    income: { type: Number, required: true },
+    age: { type: Number, required: true },
+    city: { type: String, required: true },
+    foodAtHome: { type: String, default: '' },
+    foodAwayFromHome: { type: String, default: '' },
+    housing: { type: String, default: '' },
+    transportation: { type: String, default: '' },
+    healthcare: { type: String, default: '' },
+    education: { type: String, default: '' },
+    entertainment: { type: String, default: '' },
+    personalCare: { type: String, default: '' },
+    apparelAndServices: { type: String, default: '' },
+    tobaccoProducts: { type: String, default: '' },
+    cashContributions: { type: String, default: '' },
+    alcoholicBeverages: { type: String, default: '' },
+    savings: { type: String, default: '' }
 });
 
-let FormData = mongoose.model('FormData', formDataSchema);
+let UserData = mongoose.model('UserData', UserDataSchema);
+
+
 let Signup = mongoose.model('signup', signup);
 
 module.exports = { Signup, FormData};
