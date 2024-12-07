@@ -98,6 +98,7 @@ allroutes.post('/login', async (req, res) => {
 
 allroutes.post('/signup', async (req, res) => {
   const data = req.body;
+  data.count=0;
   try {
     const newUser = await Signup.create(data);
     return res.status(201).json({ message: 'Signup successful', user: newUser });
