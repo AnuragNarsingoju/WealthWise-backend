@@ -1,13 +1,16 @@
 let mongoose = require('mongoose');
 
 
-let setsilverprice = new mongoose.Schema({
-    "Silver": Number
+let signup = new mongoose.Schema({
+    "name":String,
+    "phone":String,
+    "email":String,
+    "password":String,
 },{
     timestamps: true 
 });
 
 
-let silverprice = mongoose.model('silverprice', setsilverprice);
+let Signup = mongoose.model('signup', signup);
 
-module.exports = { silverprice};
+module.exports = { Signup};

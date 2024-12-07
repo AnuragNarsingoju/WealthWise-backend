@@ -2,7 +2,7 @@ const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
-const {  silverprice } = require("../models/allschemas");
+const {  Signup } = require("../models/allschemas");
 const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
@@ -58,11 +58,11 @@ allroutes.post('/login', async (req, res) => {
             const userRecord = await admin.auth().getUser(uid);
             firebaseEmail = userRecord.email;
         } catch (authError) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            return res.status(401).json({ error: 'Unauthorized1' });
         }
 
         if (firebaseEmail !== decrypted.email1) {
-            return res.status(401).json({ error: 'Unauthorized' });
+            return res.status(401).json({ error: 'Unauthorized2' });
         }
 
          try {
@@ -94,6 +94,34 @@ allroutes.post('/login', async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: 'Internal server error' });
     }
+});
+
+allroutes.post('/signup', async (req, res) => {
+  const data = req.body;
+  try {
+    const newUser = await Signup.create(data);
+    return res.status(201).json({ message: 'Signup successful', user: newUser });
+  } catch (e) {
+    console.error(e); 
+    return res.status(400).json({ error: e.message });
+  }
+});
+
+
+
+allroutes.get('/findemail', async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    const newUser = await Signup.findOne({ email: email });
+    if (!newUser) {
+      return res.status(404).json({ message: 'No user found with this email' });
+    }
+    return res.status(200).json({ message: 'User found', user: newUser });
+  } catch (e) {
+    console.error(e); 
+    return res.status(400).json({ error: e.message });
+  }
 });
 
 
