@@ -17,6 +17,7 @@ let signup = new mongoose.Schema({
 
 
 const formDataSchema = new mongoose.Schema({
+  email: { type: String , unique: true},
   income: { type: String },
   age: { type: String },
   city: { type: String },
