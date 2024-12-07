@@ -144,14 +144,20 @@ allroutes.post("/updatecount", async (req, res) => {
   }
 });
 
-
 allroutes.post("/submitform", async (req, res) => {
   const data = req.body;
-
   try {
     const existingEmail = await FormData.findOne({ email: data.email });
     if (existingEmail) {
-      return res.status(200).json({ error: "Email is already in use" });
+      const updatedFormData = await FormData.findOneAndUpdate(
+        { email: data.email }, 
+        { $set: data },        
+        { new: true }     
+      );
+      return res.status(200).json({
+        message: "Form data updated successfully",
+        formData: updatedFormData
+      });
     }
     const newFormData = await FormData.create(data);
     return res.status(201).json({
@@ -163,6 +169,7 @@ allroutes.post("/submitform", async (req, res) => {
     return res.status(400).json({ error: e.message });
   }
 });
+
 
 allroutes.put("/updateform", async (req, res) => {
   const { email, ...updatedData } = req.body;
