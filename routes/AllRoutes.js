@@ -2,7 +2,7 @@ const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
-const {  Signup , FormData } = require("../models/allschemas");
+const {  Signup , UserData } = require("../models/allschemas");
 const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
@@ -144,31 +144,39 @@ allroutes.post("/updatecount", async (req, res) => {
   }
 });
 
-allroutes.post("/submitform", async (req, res) => {
-  const data = req.body;
+allroutes.post('/submitdata', async (req, res) => {
+  const formData = req.body.formData;
   try {
-    const existingEmail = await FormData.findOne({ email: data.email });
-    if (existingEmail) {
-      const updatedFormData = await FormData.findOneAndUpdate(
-        { email: data.email }, 
-        { $set: data },        
-        { new: true }     
-      );
-      return res.status(200).json({
-        message: "Form data updated successfully",
-        formData: updatedFormData
-      });
+    if (!formData.email || !formData.income || !formData.age || !formData.city) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
-    const newFormData = await FormData.create(data);
-    return res.status(201).json({
-      message: "Form data submitted successfully",
-      formData: newFormData
+    const newData = new UserData({
+      email: formData.email,
+      income: formData.income,
+      age: formData.age,
+      city: formData.city,
+      foodAtHome: formData.foodAtHome,
+      foodAwayFromHome: formData.foodAwayFromHome,
+      housing: formData.housing,
+      transportation: formData.transportation,
+      healthcare: formData.healthcare,
+      education: formData.education,
+      entertainment: formData.entertainment,
+      personalCare: formData.personalCare,
+      apparelAndServices: formData.apparelAndServices,
+      tobaccoProducts: formData.tobaccoProducts,
+      cashContributions: formData.cashContributions,
+      alcoholicBeverages: formData.alcoholicBeverages,
+      savings: formData.savings
     });
-  } catch (e) {
-    console.error(e);
-    return res.status(400).json({ error: e.message });
+    await newData.save();
+    res.status(201).json({ message: 'Data saved successfully', data: newData });
+  } catch (error) {
+    console.error('Error saving data:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 
 allroutes.put("/updateform", async (req, res) => {
