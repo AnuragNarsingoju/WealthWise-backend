@@ -16,6 +16,28 @@ let signup = new mongoose.Schema({
 });
 
 
+const formDataSchema = new mongoose.Schema({
+  income: { type: String },
+  age: { type: String },
+  city: { type: String },
+  foodAtHome: { type: String },
+  foodAwayFromHome: { type: String },
+  housing: { type: String },
+  transportation: { type: String },
+  healthcare: { type: String },
+  education: { type: String },
+  entertainment: { type: String },
+  personalCare: { type: String },
+  apparelAndServices: { type: String },
+  tobaccoProducts: { type: String },
+  cashContributions: { type: String },
+  alcoholicBeverages: { type: String },
+  savings: { type: String }
+}, {
+  timestamps: true
+});
+
+const FormData = mongoose.model('FormData', formDataSchema);
 let Signup = mongoose.model('signup', signup);
 
-module.exports = { Signup};
+module.exports = { Signup, FormData};
