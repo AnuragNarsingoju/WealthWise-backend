@@ -2,7 +2,7 @@ const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
-const {  Signup } = require("../models/allschemas");
+const {  Signup , FormData } = require("../models/allschemas");
 const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
@@ -137,6 +137,50 @@ allroutes.post("/updatecount", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     return res.status(200).json({ message: "Count updated successfully", user: updatedUser });
+  } catch (e) {
+    console.error(e);
+    return res.status(400).json({ error: e.message });
+  }
+});
+
+
+allroutes.post("/submitform", async (req, res) => {
+  const data = req.body;
+
+  try {
+    const existingEmail = await FormData.findOne({ email: data.email });
+    if (existingEmail) {
+      return res.status(200).json({ error: "Email is already in use" });
+    }
+    const newFormData = await FormData.create(data);
+    return res.status(201).json({
+      message: "Form data submitted successfully",
+      formData: newFormData
+    });
+  } catch (e) {
+    console.error(e);
+    return res.status(400).json({ error: e.message });
+  }
+});
+
+allroutes.put("/updateform", async (req, res) => {
+  const { email, ...updatedData } = req.body;
+  try {
+    if (!email) {
+      return res.status(400).json({ error: "Email is required to update the form" });
+    }
+    const updatedFormData = await FormData.findOneAndUpdate(
+      { email: email },
+      { $set: updatedData },
+      { new: true, runValidators: true }
+    );
+    if (!updatedFormData) {
+      return res.status(404).json({ error: "Form data not found for this email" });
+    }
+    return res.status(200).json({
+      message: "Form data updated successfully",
+      formData: updatedFormData
+    });
   } catch (e) {
     console.error(e);
     return res.status(400).json({ error: e.message });
