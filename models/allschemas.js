@@ -17,7 +17,7 @@ let signup = new mongoose.Schema({
 
 
 
-const formDataSchema = new mongoose.Schema({
+let formDataSchema = new mongoose.Schema({
   email: { type: String , unique: true},
   income: { type: String },
   age: { type: String },
@@ -39,7 +39,7 @@ const formDataSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const FormData = mongoose.model('FormData', formDataSchema);
+let FormData = mongoose.model('FormData', formDataSchema);
 let Signup = mongoose.model('signup', signup);
 
 module.exports = { Signup, FormData};
