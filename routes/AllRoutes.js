@@ -16,7 +16,6 @@ const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 async function chat(Question) {
-  console.log(Question)
   try {
     const llm = new ChatGroq({
       model: "llama3-8b-8192",
