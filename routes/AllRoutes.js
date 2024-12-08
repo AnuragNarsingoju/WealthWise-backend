@@ -201,8 +201,12 @@ allroutes.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized1' });
         }
 
-        if (firebaseEmail !== decrypted.email1) {
+        try{
+          if (firebaseEmail !== decrypted.email1) {
             return res.status(401).json({ error: 'Unauthorized2' });
+        }
+        }catch(e){
+          console.log("hello");
         }
 
          try {
