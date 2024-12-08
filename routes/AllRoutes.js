@@ -144,64 +144,64 @@ allroutes.post("/updatecount", async (req, res) => {
   }
 });
 
+
 allroutes.post('/submitdata', async (req, res) => {
   const formData = req.body.formData;
   try {
     if (!formData.email || !formData.income || !formData.age || !formData.city) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    const newData = new UserData({
-      email: formData.email,
-      income: formData.income,
-      age: formData.age,
-      city: formData.city,
-      foodAtHome: formData.foodAtHome,
-      foodAwayFromHome: formData.foodAwayFromHome,
-      housing: formData.housing,
-      transportation: formData.transportation,
-      healthcare: formData.healthcare,
-      education: formData.education,
-      entertainment: formData.entertainment,
-      personalCare: formData.personalCare,
-      apparelAndServices: formData.apparelAndServices,
-      tobaccoProducts: formData.tobaccoProducts,
-      cashContributions: formData.cashContributions,
-      alcoholicBeverages: formData.alcoholicBeverages,
-      savings: formData.savings
-    });
-    await newData.save();
-    res.status(201).json({ message: 'Data saved successfully', data: newData });
+    const existingData = await UserData.findOne({ email: formData.email });
+
+    if (existingData) {
+      existingData.income = formData.income;
+      existingData.age = formData.age;
+      existingData.city = formData.city;
+      existingData.foodAtHome = formData.foodAtHome;
+      existingData.foodAwayFromHome = formData.foodAwayFromHome;
+      existingData.housing = formData.housing;
+      existingData.transportation = formData.transportation;
+      existingData.healthcare = formData.healthcare;
+      existingData.education = formData.education;
+      existingData.entertainment = formData.entertainment;
+      existingData.personalCare = formData.personalCare;
+      existingData.apparelAndServices = formData.apparelAndServices;
+      existingData.tobaccoProducts = formData.tobaccoProducts;
+      existingData.cashContributions = formData.cashContributions;
+      existingData.alcoholicBeverages = formData.alcoholicBeverages;
+      existingData.savings = formData.savings;
+      await existingData.save();
+      return res.status(200).json({ message: 'Data updated successfully', data: existingData });
+    } else {
+      const newData = new UserData({
+        email: formData.email,
+        income: formData.income,
+        age: formData.age,
+        city: formData.city,
+        foodAtHome: formData.foodAtHome,
+        foodAwayFromHome: formData.foodAwayFromHome,
+        housing: formData.housing,
+        transportation: formData.transportation,
+        healthcare: formData.healthcare,
+        education: formData.education,
+        entertainment: formData.entertainment,
+        personalCare: formData.personalCare,
+        apparelAndServices: formData.apparelAndServices,
+        tobaccoProducts: formData.tobaccoProducts,
+        cashContributions: formData.cashContributions,
+        alcoholicBeverages: formData.alcoholicBeverages,
+        savings: formData.savings
+      });
+      await newData.save();
+      return res.status(201).json({ message: 'Data saved successfully', data: newData });
+    }
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error saving or updating data:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 
-
-allroutes.put("/updateform", async (req, res) => {
-  const { email, ...updatedData } = req.body;
-  try {
-    if (!email) {
-      return res.status(400).json({ error: "Email is required to update the form" });
-    }
-    const updatedFormData = await FormData.findOneAndUpdate(
-      { email: email },
-      { $set: updatedData },
-      { new: true, runValidators: true }
-    );
-    if (!updatedFormData) {
-      return res.status(404).json({ error: "Form data not found for this email" });
-    }
-    return res.status(200).json({
-      message: "Form data updated successfully",
-      formData: updatedFormData
-    });
-  } catch (e) {
-    console.error(e);
-    return res.status(400).json({ error: e.message });
-  }
-});
 
 
 
