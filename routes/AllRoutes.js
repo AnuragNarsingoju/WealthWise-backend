@@ -7,6 +7,146 @@ const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
 
+
+// chatbot 
+const { Pinecone } = require('@pinecone-database/pinecone');
+const { PineconeStore } = require("@langchain/pinecone");
+const { PineconeEmbeddings } = require("@langchain/pinecone");
+const { ChatGroq } = require("@langchain/groq");
+const { PromptTemplate } = require("@langchain/core/prompts");
+const { StringOutputParser } = require("@langchain/core/output_parsers");
+async function chat(Question) {
+  console.log(Question)
+  try {
+    const llm = new ChatGroq({
+      model: "llama3-8b-8192",
+      temperature: 0,
+      maxTokens: undefined,
+      maxRetries: 5,
+    });
+
+    const PINECONE_INDEX = "knowledge-retrival";
+    const pinecone = new Pinecone();
+    const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+
+    const embeddings = new PineconeEmbeddings({
+      model: "multilingual-e5-large",
+    });
+
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+      pineconeIndex,
+      maxConcurrency: 5,
+    });
+
+    const retriever = vectorStore.asRetriever();
+
+    const generateQueries = async (question) => {
+      try {
+        const prompt = PromptTemplate.fromTemplate(
+          `You are a helpful assistant that generates exactly three distinct and concise questions related to an input question.
+          The goal is to break the input question into three self-contained queries that can be answered independently. Ensure that:
+          1. Each query is a complete question.
+          2. No additional explanation or context is included.
+    
+          Input Question: {question}
+          Generated Queries:
+          1.
+          2.
+          3.`
+        );
+
+        const formattedPrompt = await prompt.format({ question });
+        const response = await llm.invoke(formattedPrompt);
+
+        const outputParser = new StringOutputParser();
+        const parsedOutput = await outputParser.parse(response);
+        const queries = parsedOutput.content.match(/^\d+\.\s.*?\?$/gm);
+
+        return queries || [];
+      } catch (error) {
+        console.error("Error generating queries:", error);
+        return [];
+      }
+    };
+
+    const retrieveDocuments = async (subQuestions) => {
+      try {
+        const results = await Promise.all(
+          subQuestions.map((q) => retriever.invoke(q))
+        );
+        return results;
+      } catch (error) {
+        console.error("Error retrieving documents:", error);
+        return [];
+      }
+    };
+
+    const reciprocalRankFusion = async (results, k = 60) => {
+      try {
+        const fusedScores = new Map();
+
+        results.forEach((docs) => {
+          docs.forEach((doc, rank) => {
+            const docStr = JSON.stringify(doc);
+            if (!fusedScores.has(docStr)) {
+              fusedScores.set(docStr, 0);
+            }
+            fusedScores.set(
+              docStr,
+              fusedScores.get(docStr) + 1 / (rank + k)
+            );
+          });
+        });
+
+        return Array.from(fusedScores.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([docStr]) => JSON.parse(docStr));
+      } catch (error) {
+        console.error("Error in reciprocal rank fusion:", error);
+        return [];
+      }
+    };
+
+    const subQuestions = await generateQueries();
+
+    const allDocuments = await retrieveDocuments(subQuestions);
+
+    const topDocuments = await reciprocalRankFusion(allDocuments);
+
+    const template = PromptTemplate.fromTemplate(
+      `Please provide a comprehensive answer to the question below from below context by following these guidelines:
+      Question: {question}
+
+      Definition: Begin by clearly defining the term or concept referenced in the question.
+      Real-Life Examples: Illustrate your explanation with examples of real-life individuals who exemplify this concept, to enhance understanding.
+      Personal Finance Calculations: If the question involves personal finance and requires calculations, please compute any relevant values and present them.
+      Irrelevant Questions: If the question does not pertain to personal finance, simply respond with: 'As an AI, I cannot provide information on that topic.'
+
+      Context: {context}`
+    );
+
+    const finalPrompt = await template.format({
+      question: Question,
+      context: JSON.stringify(topDocuments, null, 2), // Ensure proper formatting
+    });
+
+    const outputParser = new StringOutputParser();
+    const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
+
+    return finalOutput.content;
+  } catch (error) {
+    console.error("Error in chat function:", error);
+    return "An error occurred while processing your request.";
+  }
+}
+
+
+// chatbot End
+
+
+
+
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const admin = require('firebase-admin');
@@ -201,10 +341,17 @@ allroutes.post('/submitdata', async (req, res) => {
   }
 });
 
+allroutes.post('/chatbot4', async (req, res) => {
+  const { question } = req.body;
+  try {
+    const answer = await chat(question);
+    console.log(answer);
+    res.status(200).json({ answer });
 
-
-
-
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 
 module.exports = allroutes;
