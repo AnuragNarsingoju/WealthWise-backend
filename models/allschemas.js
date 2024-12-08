@@ -15,7 +15,7 @@ let signup = new mongoose.Schema({
 });
 
 let UserDataSchema = new mongoose.Schema({
-    email: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
     income: { type: Number, required: true },
     age: { type: Number, required: true },
     city: { type: String, required: true },
