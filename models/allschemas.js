@@ -39,4 +39,4 @@ let UserData = mongoose.model('UserData', UserDataSchema);
 
 let Signup = mongoose.model('signup', signup);
 
-module.exports = { Signup, FormData};
+module.exports = { Signup, UserData};
