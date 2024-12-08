@@ -200,14 +200,6 @@ allroutes.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized1' });
         }
 
-        try{
-          if (firebaseEmail !== decrypted.email1) {
-            return res.status(401).json({ error: 'Unauthorized2' });
-        }
-        }catch(e){
-          console.log("hello");
-        }
-
          try {
           const response = await axios.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -348,7 +340,6 @@ allroutes.post('/chatbot4', async (req, res) => {
   const { question } = req.body;
   try {
     const answer = await chat(question);
-    console.log(answer);
     res.status(200).json({ answer });
 
   } catch (error) {
