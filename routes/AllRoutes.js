@@ -282,10 +282,15 @@ allroutes.post("/updatecount", async (req, res) => {
 
 allroutes.post('/submitdata', async (req, res) => {
   const formData = req.body.formData;
+  if (!formData) {
+    return res.status(400).json({ error: 'No form data provided' });
+  }
+
   try {
     if (!formData.email || !formData.income || !formData.age || !formData.city) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
     const existingData = await UserData.findOne({ email: formData.email });
 
     if (existingData) {
@@ -331,8 +336,8 @@ allroutes.post('/submitdata', async (req, res) => {
       return res.status(201).json({ message: 'Data saved successfully', data: newData });
     }
   } catch (error) {
-    console.error('Error saving or updating data:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error saving or updating data:', error.message);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
