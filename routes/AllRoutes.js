@@ -16,16 +16,9 @@ const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 
-async function chat(Question) {
-  console.log(Question)
+let retriever=null;
+async function get_retriever() {
   try {
-    const llm = new ChatGroq({
-      model: "llama3-8b-8192",
-      temperature: 0,
-      maxTokens: undefined,
-      maxRetries: 5,
-    });
-
     const PINECONE_INDEX = "knowledge-retrival";
     const pinecone = new Pinecone();
     const pineconeIndex = pinecone.Index(PINECONE_INDEX);
@@ -39,8 +32,17 @@ async function chat(Question) {
       maxConcurrency: 5,
     });
 
-    const retriever = vectorStore.asRetriever();
+    retriever = vectorStore.asRetriever(); // Assign to the shared retriever
+    console.log("Retriever initialized and ready to use.");
+  } catch (error) {
+    console.error("Error initializing retriever:", error);
+  }
+}
+get_retriever()
 
+
+async function chat(Question) {
+  try {
     const generateQueries = async (question) => {
       try {
         const prompt = PromptTemplate.fromTemplate(
