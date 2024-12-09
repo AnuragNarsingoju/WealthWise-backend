@@ -122,18 +122,17 @@ async function chat(Question) {
     //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
-      `prompt = '''
-If the question is related to finance, provide a comprehensive answer that MUST include:
-1. A definition 
-2. Real-life examples
-3. Personal finance calculations
-
-If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI, I cannot provide information on that topic.'
-
-Question: {question}
-Context: {context}
-'''
-`
+      `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
+        If the question is related to finance, provide a comprehensive answer that MUST include:
+        1.⁠ ⁠A definition 
+        2.⁠ ⁠Real-life examples
+        3.⁠ ⁠Personal finance calculations
+        
+        If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.'
+        
+        Question: {question}
+        Context: {context}
+        `
     );
 
     const finalPrompt = await template.format({
