@@ -3,12 +3,15 @@ const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
-const {  Signup , UserData } = require("../models/allschemas");
+const {  Signup,UserData, csvFile } = require("../models/allschemas");
 const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
 
-const fs = require("fs");
+
+const csvtojson = require('csvtojson');
+const fs = require('fs');
+
 const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
@@ -157,6 +160,38 @@ async function chat(Question) {
 //chat bot end
 
 //fd start
+
+async function fetchAllCSVData() {
+  const fileMappings = {
+      taxSavingFd: "tax_fd.csv",
+      seniorPublicFd: "senior_public.csv",
+      seniorPrivateFd: "senior_private.csv",
+      comparisonPublicFd: "public_sector_banks.csv",
+      comparisonPrivateFd: "private_sector_banks.csv",
+  };
+  const results = {};
+  for (const [key, fileName] of Object.entries(fileMappings)) {
+      const csvDocument = await csvFile.findOne({ fileName });
+      if (csvDocument) {
+          results[key] = csvDocument.data;
+      } else {
+          console.warn(`CSV file "${fileName}" not found in the database.`);
+      }
+  }
+
+  return results;
+}
+
+(async () => {
+    try {
+        const allCSVData = await fetchAllCSVData();
+        console.log("Fetched All CSV Data:", allCSVData);
+    } catch (error) {
+        console.error("Error:", error.message);
+    }
+})();
+
+
 
 const groq = new Groq({ apiKey: "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"});
 
