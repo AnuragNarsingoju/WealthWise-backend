@@ -231,102 +231,102 @@ function calculateMaturity(principal, rate, termYears) {
 // }
 // loadAndCleanData();
 
-function recommendFds(age, amount, termYears) {
-  const taxSavingFd = datasets.taxSavingFd;
-  const seniorPublicFd = datasets.seniorPublicFd;
-  const seniorPrivateFd = datasets.seniorPrivateFd;
-  const comparisonPublicFd = datasets.comparisonPublicFd;
-  const comparisonPrivateFd = datasets.comparisonPrivateFd;
+// function recommendFds(age, amount, termYears) {
+//   const taxSavingFd = datasets.taxSavingFd;
+//   const seniorPublicFd = datasets.seniorPublicFd;
+//   const seniorPrivateFd = datasets.seniorPrivateFd;
+//   const comparisonPublicFd = datasets.comparisonPublicFd;
+//   const comparisonPrivateFd = datasets.comparisonPrivateFd;
 
-  let recommendations = [];
+//   let recommendations = [];
 
-  if (age > 60 && amount <= 150000) {
-    taxSavingFd.forEach((fd) => {
-      const maturityAmount = calculateMaturity(amount, fd['Senior Citizens'], termYears);
-      fd['Maturity Amount'] = maturityAmount;
-    });
+//   if (age > 60 && amount <= 150000) {
+//     taxSavingFd.forEach((fd) => {
+//       const maturityAmount = calculateMaturity(amount, fd['Senior Citizens'], termYears);
+//       fd['Maturity Amount'] = maturityAmount;
+//     });
 
-    recommendations = taxSavingFd
-      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-      .slice(0, 3);
+//     recommendations = taxSavingFd
+//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+//       .slice(0, 3);
 
-    return recommendations.map((fd) => {
-      return {
-        bank: fd['Banks'],
-        interestRate: fd['Senior Citizens'],
-        maturityAmount: fd['Maturity Amount'],
-        reason: "Tax Saving FD for Senior Citizens"
-      };
-    });
+//     return recommendations.map((fd) => {
+//       return {
+//         bank: fd['Banks'],
+//         interestRate: fd['Senior Citizens'],
+//         maturityAmount: fd['Maturity Amount'],
+//         reason: "Tax Saving FD for Senior Citizens"
+//       };
+//     });
 
-  } else if (age <= 60 && amount <= 150000) {
-    taxSavingFd.forEach((fd) => {
-      const maturityAmount = calculateMaturity(amount, fd['General Citizens'], termYears);
-      fd['Maturity Amount'] = maturityAmount;
-    });
+//   } else if (age <= 60 && amount <= 150000) {
+//     taxSavingFd.forEach((fd) => {
+//       const maturityAmount = calculateMaturity(amount, fd['General Citizens'], termYears);
+//       fd['Maturity Amount'] = maturityAmount;
+//     });
 
-    recommendations = taxSavingFd
-      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-      .slice(0, 3);
+//     recommendations = taxSavingFd
+//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+//       .slice(0, 3);
 
-    return recommendations.map((fd) => {
-      return {
-        bank: fd['Banks'],
-        interestRate: fd['General Citizens'],
-        maturityAmount: fd['Maturity Amount'],
-        reason: "Tax Saving FD for General Citizens"
-      };
-    });
+//     return recommendations.map((fd) => {
+//       return {
+//         bank: fd['Banks'],
+//         interestRate: fd['General Citizens'],
+//         maturityAmount: fd['Maturity Amount'],
+//         reason: "Tax Saving FD for General Citizens"
+//       };
+//     });
 
-  } else if (age > 60 && amount > 150000) {
-    const seniorFd = seniorPublicFd.concat(seniorPrivateFd);
-    seniorFd.forEach((fd) => {
-      const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
-      const maturityAmount = calculateMaturity(amount, averageRate, termYears);
-      fd['Average Rate (%)'] = averageRate;
-      fd['Maturity Amount'] = maturityAmount;
-    });
+//   } else if (age > 60 && amount > 150000) {
+//     const seniorFd = seniorPublicFd.concat(seniorPrivateFd);
+//     seniorFd.forEach((fd) => {
+//       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
+//       const maturityAmount = calculateMaturity(amount, averageRate, termYears);
+//       fd['Average Rate (%)'] = averageRate;
+//       fd['Maturity Amount'] = maturityAmount;
+//     });
 
-    recommendations = seniorFd
-      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-      .slice(0, 3);
+//     recommendations = seniorFd
+//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+//       .slice(0, 3);
 
-    return recommendations.map((fd) => {
-      return {
-        bank: fd['Bank Name'],
-        interestRate: fd['Average Rate (%)'],
-        maturityAmount: fd['Maturity Amount'],
-        reason: "Senior Citizen FD (Public & Private Banks)"
-      };
-    });
+//     return recommendations.map((fd) => {
+//       return {
+//         bank: fd['Bank Name'],
+//         interestRate: fd['Average Rate (%)'],
+//         maturityAmount: fd['Maturity Amount'],
+//         reason: "Senior Citizen FD (Public & Private Banks)"
+//       };
+//     });
 
-  } else if (age <= 60 && amount > 150000) {
-    const comparisonFd = comparisonPublicFd.concat(comparisonPrivateFd);
-    comparisonFd.forEach((fd) => {
-      const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
-      const maturityAmount = calculateMaturity(amount, averageRate, termYears);
-      fd['Average Rate (%)'] = averageRate;
-      fd['Maturity Amount'] = maturityAmount;
-    });
+//   } else if (age <= 60 && amount > 150000) {
+//     const comparisonFd = comparisonPublicFd.concat(comparisonPrivateFd);
+//     comparisonFd.forEach((fd) => {
+//       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
+//       const maturityAmount = calculateMaturity(amount, averageRate, termYears);
+//       fd['Average Rate (%)'] = averageRate;
+//       fd['Maturity Amount'] = maturityAmount;
+//     });
 
-    recommendations = comparisonFd
-      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-      .slice(0, 3);
+//     recommendations = comparisonFd
+//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+//       .slice(0, 3);
 
-    return recommendations.map((fd) => {
-      return {
-        bank: fd['Public Sector Banks'] || fd['Private Sector Banks'],
-        interestRate: fd['Average Rate (%)'],
-        maturityAmount: fd['Maturity Amount'],
-        reason: "Comparison FD (Public & Private Banks)"
-      };
-    });
+//     return recommendations.map((fd) => {
+//       return {
+//         bank: fd['Public Sector Banks'] || fd['Private Sector Banks'],
+//         interestRate: fd['Average Rate (%)'],
+//         maturityAmount: fd['Maturity Amount'],
+//         reason: "Comparison FD (Public & Private Banks)"
+//       };
+//     });
 
-  } else {
-    console.log("No recommendations available for the given inputs.");
-    return [];
-  }
-}
+//   } else {
+//     console.log("No recommendations available for the given inputs.");
+//     return [];
+//   }
+// }
 
 //fd end
 
