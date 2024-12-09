@@ -1,43 +1,45 @@
+
 const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
-const {  Signup,UserData, csvFile } = require("../models/allschemas");
+const {  Signup , UserData } = require("../models/allschemas");
 const multer = require("multer");
 const allroutes = express.Router();
+const upload = multer();
 
-const csvtojson = require('csvtojson');
-const fs = require('fs');
+const fs = require("fs");
+const path = require("path");
+const csv = require("csv-parser");
+const Groq = require("groq-sdk");
+const bodyParser = require('body-parser');
+require('dotenv').config();
 
- const { Pinecone } = require('@pinecone-database/pinecone');
+// chatbot 
+const { Pinecone } = require('@pinecone-database/pinecone');
 const { PineconeStore } = require("@langchain/pinecone");
 const { PineconeEmbeddings } = require("@langchain/pinecone");
 const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 
-
-const csv = require("csv-parser");
-const dotenv = require("dotenv");
-const Groq = require("groq-sdk");
-const bodyParser = require('body-parser');
-
-
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-const admin = require('firebase-admin');
-
-
-const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
-const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
-admin.initializeApp({
-  credential: admin.credential.cert(credentials)
-});
-
-
+let retriever=null;
+async function get_retriever() {
+    const PINECONE_INDEX = "knowledge-retrival";
+    const pinecone = new Pinecone();
+    const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+    const embeddings = new PineconeEmbeddings({
+      model: "multilingual-e5-large",
+    });
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+      pineconeIndex,
+      maxConcurrency: 5,
+    });
+    retriever = vectorStore.asRetriever();
+}
+get_retriever();
 
 async function chat(Question) {
-  console.log(Question)
   try {
     const llm = new ChatGroq({
       model: "llama3-8b-8192",
@@ -45,22 +47,7 @@ async function chat(Question) {
       maxTokens: undefined,
       maxRetries: 5,
     });
-
-    const PINECONE_INDEX = "knowledge-retrival";
-    const pinecone = new Pinecone();
-    const pineconeIndex = pinecone.Index(PINECONE_INDEX);
-
-    const embeddings = new PineconeEmbeddings({
-      model: "multilingual-e5-large",
-    });
-
-    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-      pineconeIndex,
-      maxConcurrency: 5,
-    });
-
-    const retriever = vectorStore.asRetriever();
-
+    
     const generateQueries = async (question) => {
       try {
         const prompt = PromptTemplate.fromTemplate(
@@ -76,12 +63,12 @@ async function chat(Question) {
           3.`
         );
 
-        const formattedPrompt = await prompt.format({ question });
+        const formattedPrompt = await prompt.format({ question: Question });
         const response = await llm.invoke(formattedPrompt);
-
         const outputParser = new StringOutputParser();
         const parsedOutput = await outputParser.parse(response);
         const queries = parsedOutput.content.match(/^\d+\.\s.*?\?$/gm);
+
 
         return queries || [];
       } catch (error) {
@@ -133,28 +120,33 @@ async function chat(Question) {
 
     const allDocuments = await retrieveDocuments(subQuestions);
 
+
+
     const topDocuments = await reciprocalRankFusion(allDocuments);
+    //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
-      `Please provide a comprehensive answer to the question below from below context by following these guidelines:
-      Question: {question}
-
-      Definition: Begin by clearly defining the term or concept referenced in the question.
-      Real-Life Examples: Illustrate your explanation with examples of real-life individuals who exemplify this concept, to enhance understanding.
-      Personal Finance Calculations: If the question involves personal finance and requires calculations, please compute any relevant values and present them.
-      Irrelevant Questions: If the question does not pertain to personal finance, simply respond with: 'As an AI, I cannot provide information on that topic.'
-
-      Context: {context}`
+      `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
+        If the question is related to finance, provide a comprehensive answer that include:
+        1.⁠ ⁠A definition 
+        2.⁠ ⁠Real-life examples
+        3.⁠ ⁠Personal finance calculations
+        
+        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian ruppess
+        If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.'
+        
+        Question: {question}
+        Context: {context}
+        `
     );
 
     const finalPrompt = await template.format({
       question: Question,
-      context: JSON.stringify(topDocuments, null, 2), // Ensure proper formatting
+      context: topDocuments
     });
-
+    //console.log(finalPrompt)
     const outputParser = new StringOutputParser();
     const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
-
     return finalOutput.content;
   } catch (error) {
     console.error("Error in chat function:", error);
@@ -162,41 +154,11 @@ async function chat(Question) {
   }
 }
 
+//chat bot end
 
-// fd 
+//fd start
 
-async function fetchAllCSVData() {
-  const fileMappings = {
-      taxSavingFd: "tax_fd.csv",
-      seniorPublicFd: "senior_public.csv",
-      seniorPrivateFd: "senior_private.csv",
-      comparisonPublicFd: "public_sector_banks.csv",
-      comparisonPrivateFd: "private_sector_banks.csv",
-  };
-  const results = {};
-  for (const [key, fileName] of Object.entries(fileMappings)) {
-      const csvDocument = await csvFile.findOne({ fileName });
-      if (csvDocument) {
-          results[key] = csvDocument.data;
-      } else {
-          console.warn(`CSV file "${fileName}" not found in the database.`);
-      }
-  }
-
-  return results;
-}
-
-(async () => {
-    try {
-        const allCSVData = await fetchAllCSVData();
-        console.log("Fetched All CSV Data:", allCSVData);
-    } catch (error) {
-        console.error("Error:", error.message);
-    }
-})();
-
-
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: "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"});
 
 let datasets = {
   taxSavingFd: [],
@@ -205,71 +167,67 @@ let datasets = {
   comparisonPublicFd: [],
   comparisonPrivateFd: [],
 };
+
 function calculateMaturity(principal, rate, termYears) {
   return principal * Math.pow(1 + rate / 100, termYears);
 }
 
 
+// function loadAndCleanData() {
+//   const filePaths = {
+//     taxSavingFd: "../data/tax_fd.csv",
+//     seniorPublicFd: "../data/senior_public.csv",
+//     seniorPrivateFd: "../data/senior_private.csv",
+//     comparisonPublicFd: "../data/public_sector_banks.csv",
+//     comparisonPrivateFd: "../data/private_sector_banks.csv",
+//   };
 
-function loadAndCleanData() {
-  const filePaths = {
-    taxSavingFd: "./data/tax_fd.csv",
-    seniorPublicFd: "./data/senior_public.csv",
-    seniorPrivateFd: "./data/senior_private.csv",
-    comparisonPublicFd: "./data/public_sector_banks.csv",
-    comparisonPrivateFd: "./data/private_sector_banks.csv",
-  };
+//   Object.entries(filePaths).forEach(([key, filePath]) => {
+//     datasets[key] = [];
+//     fs.createReadStream(path.join(__dirname, filePath))
+//       .pipe(csv())
+//       .on("data", (row) => {
+//         if (key === "taxSavingFd") {
+//           row["General Citizens"] = row["General Citizens"]
+//             ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
+//             : undefined;
 
-  Object.entries(filePaths).forEach(([key, filePath]) => {
-    datasets[key] = [];
-    fs.createReadStream(path.join(__dirname, filePath))
-      .pipe(csv())
-      .on("data", (row) => {
-        // Handle taxSavingFd, seniorPublicFd, and seniorPrivateFd (interest rates)
-        if (key === "taxSavingFd") {
-          row["General Citizens"] = row["General Citizens"]
-            ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
-            : undefined;
+//           row["Senior Citizens"] = row["Senior Citizens"]
+//             ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
+//             : undefined;
+//         } else {
+//           Object.keys(row).forEach((col) => {
+//             if (col === "3-years tenure") {
+//               row["3-year tenure"] = row[col];
+//               delete row[col];
+//             }
+//             if (col === "5-years tenure") {
+//               row["5-year tenure"] = row[col];
+//               delete row[col];
+//             }
+//           });
 
-          row["Senior Citizens"] = row["Senior Citizens"]
-            ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
-            : undefined;
-        } else {
-          // Normalize column names for public/private sector FD datasets
-          Object.keys(row).forEach((col) => {
-            if (col === "3-years tenure") {
-              row["3-year tenure"] = row[col];
-              delete row[col];
-            }
-            if (col === "5-years tenure") {
-              row["5-year tenure"] = row[col];
-              delete row[col];
-            }
-          });
+//           ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
+//             if (row[col]) {
+//               row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
+//             }
+//           });
+//         }
 
-          // Handle interest rates (parse into numbers)
-          ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
-            if (row[col]) {
-              row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
-            }
-          });
-        }
+//         datasets[key].push(row);
+//       })
+//       .on("end", () => {
+//         if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
+//           datasets[key].forEach(row => {
+//             delete row["General Citizens"];
+//             delete row["Senior Citizens"];
+//           });
+//         }
+//       });
+//   });
+// }
+// loadAndCleanData();
 
-        datasets[key].push(row);
-      })
-      .on("end", () => {
-        // Clean up after loading
-        if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
-          datasets[key].forEach(row => {
-            delete row["General Citizens"];
-            delete row["Senior Citizens"];
-          });
-        }
-      });
-  });
-}
-
-// Function to recommend top 3 FDs
 function recommendFds(age, amount, termYears) {
   const taxSavingFd = datasets.taxSavingFd;
   const seniorPublicFd = datasets.seniorPublicFd;
@@ -280,7 +238,6 @@ function recommendFds(age, amount, termYears) {
   let recommendations = [];
 
   if (age > 60 && amount <= 150000) {
-    // Use Tax Saving FD with Senior Citizen Rate
     taxSavingFd.forEach((fd) => {
       const maturityAmount = calculateMaturity(amount, fd['Senior Citizens'], termYears);
       fd['Maturity Amount'] = maturityAmount;
@@ -300,7 +257,6 @@ function recommendFds(age, amount, termYears) {
     });
 
   } else if (age <= 60 && amount <= 150000) {
-    // Use Tax Saving FD with General Rate
     taxSavingFd.forEach((fd) => {
       const maturityAmount = calculateMaturity(amount, fd['General Citizens'], termYears);
       fd['Maturity Amount'] = maturityAmount;
@@ -320,7 +276,6 @@ function recommendFds(age, amount, termYears) {
     });
 
   } else if (age > 60 && amount > 150000) {
-    // Use Senior Citizen Public and Private Bank FDs (Average Interest Rate)
     const seniorFd = seniorPublicFd.concat(seniorPrivateFd);
     seniorFd.forEach((fd) => {
       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
@@ -343,7 +298,6 @@ function recommendFds(age, amount, termYears) {
     });
 
   } else if (age <= 60 && amount > 150000) {
-    // Use Comparison Public and Private Bank FDs (Average Interest Rate)
     const comparisonFd = comparisonPublicFd.concat(comparisonPrivateFd);
     comparisonFd.forEach((fd) => {
       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
@@ -371,9 +325,63 @@ function recommendFds(age, amount, termYears) {
   }
 }
 
-
 //fd end
 
+const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
+
+
+const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
+const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
+admin.initializeApp({
+  credential: admin.credential.cert(credentials)
+});
+
+
+allroutes.post("/fdrecommendations", async (req, res) => {
+  const userInput = req.body;
+  const { age, amount, termYears } = userInput;
+
+  if (!age || !amount || !termYears) {
+    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
+  }
+
+  try {
+    const recommendationDetails = recommendFds(age, amount, termYears);
+    const bestRecommendation = recommendationDetails[0];
+    const prompt = `
+      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
+      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
+
+      FD Option:
+      - Bank Name: ${bestRecommendation.bank}
+      - Interest Rate: ${bestRecommendation.interestRate}%
+      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
+      - Reason: ${bestRecommendation.reason}
+
+      Please explain why this is the best choice.`;
+
+    const response = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+    });
+
+    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+
+    res.json({
+      bestRecommendation: {
+        bank: bestRecommendation.bank,
+        interestRate: bestRecommendation.interestRate,
+        maturityAmount: bestRecommendation.maturityAmount,
+        reason: bestRecommendation.reason
+      },
+      groqRecommendation
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 
 allroutes.post('/login', async (req, res) => {
@@ -419,7 +427,6 @@ allroutes.post('/login', async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized1' });
         }
 
-
          try {
           const response = await axios.post(
             'https://www.google.com/recaptcha/api/siteverify',
@@ -453,7 +460,7 @@ allroutes.post('/login', async (req, res) => {
 
 allroutes.post('/signup', async (req, res) => {
   const data = req.body;
-  data.count = 0;
+  data.count=0;
   try {
     const newUser = await Signup.create(data);
     return res.status(201).json({ message: 'Signup successful', user: newUser });
@@ -563,14 +570,10 @@ allroutes.post('/submitdata', async (req, res) => {
   }
 });
 
-
 allroutes.post('/chatbot4', async (req, res) => {
   const { question } = req.body;
-
-  console.log(question)
   try {
     const answer = await chat(question);
-    console.log(answer);
     res.status(200).json({ answer });
 
   } catch (error) {
@@ -578,35 +581,5 @@ allroutes.post('/chatbot4', async (req, res) => {
   }
 });
 
-
-const upload = multer({ dest: 'uploads/' });
-allroutes.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-      if (!req.file) {
-          return res.status(400).json({ message: "No file uploaded" });
-      }
-      const fileName = req.file.originalname;
-      let jsonArray;
-      try {
-          jsonArray = await csvtojson().fromFile(req.file.path);
-      } catch (csvError) {
-          return res.status(500).json({ message: "Error processing CSV file", error: csvError.message });
-      }
-      const existingDocument = await csvFile.findOne({ fileName });
-      if (existingDocument) {
-          existingDocument.data = jsonArray;
-          await existingDocument.save();
-          console.log(`Replaced data for file: ${fileName}`);
-      } else {
-          await csvFile.create({ fileName, data: jsonArray });
-          console.log(`Inserted new data for file: ${fileName}`);
-      }
-      fs.unlinkSync(req.file.path);
-      res.status(200).json({ message: `Data from ${fileName} successfully processed` });
-  } catch (error) {
-      console.error("Error during file upload:", error);
-      res.status(500).json({ message: "Failed to process file", error: error.message });
-  }
-});
 
 module.exports = allroutes;
