@@ -1,3 +1,4 @@
+
 const CryptoJS = require('crypto-js');
 const express = require("express");
 const axios = require('axios');
@@ -12,7 +13,6 @@ const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
 const bodyParser = require('body-parser');
-require('dotenv').config();
 
 
 // chatbot 
@@ -117,6 +117,7 @@ async function chat(Question) {
     };
 
     const subQuestions = await generateQueries();
+    //  console.log(subQuestions)
 
 
     const allDocuments = await retrieveDocuments(subQuestions);
@@ -124,14 +125,16 @@ async function chat(Question) {
 
 
     const topDocuments = await reciprocalRankFusion(allDocuments);
+    //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
-        If the question is related to finance, provide a comprehensive answer that MUST include:
+        If the question is related to finance, provide a comprehensive answer that include:
         1.⁠ ⁠A definition 
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
         
+        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian ruppess
         If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.'
         
         Question: {question}
@@ -157,7 +160,7 @@ async function chat(Question) {
 
 //fd start
 
-const groq = new Groq({ apiKey: "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"});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY2});
 
 let datasets = {
   taxSavingFd: [],
@@ -323,54 +326,6 @@ function recommendFds(age, amount, termYears) {
     return [];
   }
 }
-
-
-allroutes.post("/fdrecommendations", async (req, res) => {
-  const userInput = req.body;
-  const { age, amount, termYears } = userInput;
-
-  if (!age || !amount || !termYears) {
-    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
-  }
-
-  try {
-    const recommendationDetails = recommendFds(age, amount, termYears);
-    console.log(recommendationDetails);
-
-    const bestRecommendation = recommendationDetails[0]; 
-    const prompt = `
-      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
-      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
-
-      FD Option:
-      - Bank Name: ${bestRecommendation.bank}
-      - Interest Rate: ${bestRecommendation.interestRate}%
-      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
-      - Reason: ${bestRecommendation.reason}
-
-      Please explain why this is the best choice.`;
-
-    const response = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama3-8b-8192",
-    });
-
-    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
-
-    res.json({
-      bestRecommendation: {
-        bank: bestRecommendation.bank,
-        interestRate: bestRecommendation.interestRate,
-        maturityAmount: bestRecommendation.maturityAmount,
-        reason: bestRecommendation.reason
-      },
-      groqRecommendation
-    });
-
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
 
 //fd end
 
