@@ -128,12 +128,11 @@ async function chat(Question) {
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
-        If the question is related to finance, provide a comprehensive answer that include:
+        If the question is related to finance, provide a comprehensive answer that MUST include:
         1.⁠ ⁠A definition 
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
         
-        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian ruppess
         If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.'
         
         Question: {question}
