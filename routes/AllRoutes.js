@@ -5,8 +5,6 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const {  Signup,UserData, csvFile } = require("../models/allschemas");
 const allroutes = express.Router();
-const upload = multer();
-
 
 const csvtojson = require('csvtojson');
 const fs = require('fs');
