@@ -173,61 +173,69 @@ function calculateMaturity(principal, rate, termYears) {
   return principal * Math.pow(1 + rate / 100, termYears);
 }
 
+async function fetchAllCSVData() {
+  const fileMappings = {
+    taxSavingFd: "tax_fd.csv",
+    seniorPublicFd: "senior_public.csv",
+    seniorPrivateFd: "senior_private.csv",
+    comparisonPublicFd: "public_sector_banks.csv",
+    comparisonPrivateFd: "private_sector_banks.csv",
+  };
 
-// function loadAndCleanData() {
-//   const filePaths = {
-//     taxSavingFd: "../data/tax_fd.csv",
-//     seniorPublicFd: "../data/senior_public.csv",
-//     seniorPrivateFd: "../data/senior_private.csv",
-//     comparisonPublicFd: "../data/public_sector_banks.csv",
-//     comparisonPrivateFd: "../data/private_sector_banks.csv",
-//   };
+  for (const [key, fileName] of Object.entries(fileMappings)) {
+    const csvDocument = await csvFile.findOne({ fileName });
+    if (csvDocument) {
+      datasets[key] = csvDocument.data; 
+    } else {
+      console.warn(`CSV file "${fileName}" not found in the database.`);
+    }
+  }
+}
 
-//   Object.entries(filePaths).forEach(([key, filePath]) => {
-//     datasets[key] = [];
-//     fs.createReadStream(path.join(__dirname, filePath))
-//       .pipe(csv())
-//       .on("data", (row) => {
-//         if (key === "taxSavingFd") {
-//           row["General Citizens"] = row["General Citizens"]
-//             ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
+async function loadAndCleanData() {
+  await fetchAllCSVData();
+  Object.entries(datasets).forEach(([key, data]) => {
+    data.forEach((row) => {
+      if (key === "taxSavingFd") {
+        row["General Citizens"] = row["General Citizens"]
+          ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
+          : undefined;
 
-//           row["Senior Citizens"] = row["Senior Citizens"]
-//             ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
-//         } else {
-//           Object.keys(row).forEach((col) => {
-//             if (col === "3-years tenure") {
-//               row["3-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//             if (col === "5-years tenure") {
-//               row["5-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//           });
+        row["Senior Citizens"] = row["Senior Citizens"]
+          ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
+          : undefined;
+      } else {
+        Object.keys(row).forEach((col) => {
+          if (col === "3-years tenure") {
+            row["3-year tenure"] = row[col];
+            delete row[col];
+          }
+          if (col === "5-years tenure") {
+            row["5-year tenure"] = row[col];
+            delete row[col];
+          }
+        });
 
-//           ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
-//             if (row[col]) {
-//               row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
-//             }
-//           });
-//         }
+        ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
+          if (row[col]) {
+            row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
+          }
+        });
+      }
+    });
 
-//         datasets[key].push(row);
-//       })
-//       .on("end", () => {
-//         if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
-//           datasets[key].forEach(row => {
-//             delete row["General Citizens"];
-//             delete row["Senior Citizens"];
-//           });
-//         }
-//       });
-//   });
-// }
-// loadAndCleanData();
+    if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
+      datasets[key].forEach(row => {
+        delete row["General Citizens"];
+        delete row["Senior Citizens"];
+      });
+    }
+  });
+
+  console.log("Data cleaned and processed:", datasets);
+}
+
+loadAndCleanData();
 
 function recommendFds(age, amount, termYears) {
   const taxSavingFd = datasets.taxSavingFd;
@@ -325,6 +333,7 @@ function recommendFds(age, amount, termYears) {
     return [];
   }
 }
+
 
 //fd end
 
