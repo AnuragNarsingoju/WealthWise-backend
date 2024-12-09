@@ -23,6 +23,19 @@ const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 
+
+const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
+
+
+const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
+const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
+admin.initializeApp({
+  credential: admin.credential.cert(credentials)
+});
+
+
+
 let retriever=null;
 async function get_retriever() {
     const PINECONE_INDEX = "knowledge-retrival";
@@ -179,13 +192,13 @@ async function fetchAllCSVData() {
   return results;
 }
 
-(async () => {
-    try {
-        const allCSVData = await fetchAllCSVData();
-    } catch (error) {
-        console.error("Error:", error.message);
-    }
-})();
+// (async () => {
+//     try {
+//         const allCSVData = await fetchAllCSVData();
+//     } catch (error) {
+//         console.error("Error:", error.message);
+//     }
+// })();
 
 
 
@@ -356,16 +369,6 @@ function recommendFds(age, amount, termYears) {
 }
 
 //fd end
-
-const jwt = require('jsonwebtoken');
-const admin = require('firebase-admin');
-
-
-const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
-const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
-admin.initializeApp({
-  credential: admin.credential.cert(credentials)
-});
 
 
 allroutes.post("/fdrecommendations", async (req, res) => {
