@@ -4,7 +4,6 @@ const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
 const {  Signup,UserData, csvFile } = require("../models/allschemas");
-const multer = require("multer");
 const allroutes = express.Router();
 const upload = multer();
 
@@ -615,6 +614,37 @@ allroutes.post('/chatbot4', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+const upload = multer({ dest: 'uploads/' });
+allroutes.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+      if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+      }
+      const fileName = req.file.originalname;
+      let jsonArray;
+      try {
+          jsonArray = await csvtojson().fromFile(req.file.path);
+      } catch (csvError) {
+          return res.status(500).json({ message: "Error processing CSV file", error: csvError.message });
+      }
+      const existingDocument = await csvFile.findOne({ fileName });
+      if (existingDocument) {
+          existingDocument.data = jsonArray;
+          await existingDocument.save();
+          console.log(`Replaced data for file: ${fileName}`);
+      } else {
+          await csvFile.create({ fileName, data: jsonArray });
+          console.log(`Inserted new data for file: ${fileName}`);
+      }
+      fs.unlinkSync(req.file.path);
+      res.status(200).json({ message: `Data from ${fileName} successfully processed` });
+  } catch (error) {
+      console.error("Error during file upload:", error);
+      res.status(500).json({ message: "Failed to process file", error: error.message });
+  }
+});
+
 
 
 module.exports = allroutes;
