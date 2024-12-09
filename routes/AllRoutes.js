@@ -12,6 +12,7 @@ const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 
 // chatbot 
