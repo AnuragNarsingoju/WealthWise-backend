@@ -13,7 +13,7 @@ const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
 const bodyParser = require('body-parser');
-
+require('dotenv').config();
 
 // chatbot 
 const { Pinecone } = require('@pinecone-database/pinecone');
@@ -117,8 +117,6 @@ async function chat(Question) {
     };
 
     const subQuestions = await generateQueries();
-    //  console.log(subQuestions)
-
 
     const allDocuments = await retrieveDocuments(subQuestions);
 
@@ -330,7 +328,6 @@ function recommendFds(age, amount, termYears) {
 //fd end
 
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 const admin = require('firebase-admin');
 
 
