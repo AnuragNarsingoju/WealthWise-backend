@@ -337,6 +337,53 @@ admin.initializeApp({
   credential: admin.credential.cert(credentials)
 });
 
+
+allroutes.post("/fdrecommendations", async (req, res) => {
+  const userInput = req.body;
+  const { age, amount, termYears } = userInput;
+
+  if (!age || !amount || !termYears) {
+    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
+  }
+
+  try {
+    const recommendationDetails = recommendFds(age, amount, termYears);
+    const bestRecommendation = recommendationDetails[0];
+    const prompt = `
+      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
+      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
+
+      FD Option:
+      - Bank Name: ${bestRecommendation.bank}
+      - Interest Rate: ${bestRecommendation.interestRate}%
+      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
+      - Reason: ${bestRecommendation.reason}
+
+      Please explain why this is the best choice.`;
+
+    const response = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+    });
+
+    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+
+    res.json({
+      bestRecommendation: {
+        bank: bestRecommendation.bank,
+        interestRate: bestRecommendation.interestRate,
+        maturityAmount: bestRecommendation.maturityAmount,
+        reason: bestRecommendation.reason
+      },
+      groqRecommendation
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
 allroutes.post('/login', async (req, res) => {
   try {
         const encrypted1 = req.body.encrypted;
