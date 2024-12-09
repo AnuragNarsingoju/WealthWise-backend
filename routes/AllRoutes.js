@@ -173,60 +173,60 @@ function calculateMaturity(principal, rate, termYears) {
 }
 
 
-// function loadAndCleanData() {
-//   const filePaths = {
-//     taxSavingFd: "../data/tax_fd.csv",
-//     seniorPublicFd: "../data/senior_public.csv",
-//     seniorPrivateFd: "../data/senior_private.csv",
-//     comparisonPublicFd: "../data/public_sector_banks.csv",
-//     comparisonPrivateFd: "../data/private_sector_banks.csv",
-//   };
+function loadAndCleanData() {
+  const filePaths = {
+    taxSavingFd: "../data/tax_fd.csv",
+    seniorPublicFd: "../data/senior_public.csv",
+    seniorPrivateFd: "../data/senior_private.csv",
+    comparisonPublicFd: "../data/public_sector_banks.csv",
+    comparisonPrivateFd: "../data/private_sector_banks.csv",
+  };
 
-//   Object.entries(filePaths).forEach(([key, filePath]) => {
-//     datasets[key] = [];
-//     fs.createReadStream(path.join(__dirname, filePath))
-//       .pipe(csv())
-//       .on("data", (row) => {
-//         if (key === "taxSavingFd") {
-//           row["General Citizens"] = row["General Citizens"]
-//             ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
+  Object.entries(filePaths).forEach(([key, filePath]) => {
+    datasets[key] = [];
+    fs.createReadStream(path.join(__dirname, filePath))
+      .pipe(csv())
+      .on("data", (row) => {
+        if (key === "taxSavingFd") {
+          row["General Citizens"] = row["General Citizens"]
+            ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
+            : undefined;
 
-//           row["Senior Citizens"] = row["Senior Citizens"]
-//             ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
-//         } else {
-//           Object.keys(row).forEach((col) => {
-//             if (col === "3-years tenure") {
-//               row["3-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//             if (col === "5-years tenure") {
-//               row["5-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//           });
+          row["Senior Citizens"] = row["Senior Citizens"]
+            ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
+            : undefined;
+        } else {
+          Object.keys(row).forEach((col) => {
+            if (col === "3-years tenure") {
+              row["3-year tenure"] = row[col];
+              delete row[col];
+            }
+            if (col === "5-years tenure") {
+              row["5-year tenure"] = row[col];
+              delete row[col];
+            }
+          });
 
-//           ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
-//             if (row[col]) {
-//               row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
-//             }
-//           });
-//         }
+          ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
+            if (row[col]) {
+              row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
+            }
+          });
+        }
 
-//         datasets[key].push(row);
-//       })
-//       .on("end", () => {
-//         if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
-//           datasets[key].forEach(row => {
-//             delete row["General Citizens"];
-//             delete row["Senior Citizens"];
-//           });
-//         }
-//       });
-//   });
-// }
-// loadAndCleanData();
+        datasets[key].push(row);
+      })
+      .on("end", () => {
+        if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
+          datasets[key].forEach(row => {
+            delete row["General Citizens"];
+            delete row["Senior Citizens"];
+          });
+        }
+      });
+  });
+}
+loadAndCleanData();
 
 function recommendFds(age, amount, termYears) {
   const taxSavingFd = datasets.taxSavingFd;
