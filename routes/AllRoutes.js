@@ -582,7 +582,6 @@ allroutes.post('/chatbot4', async (req, res) => {
   }
 });
 
-// const upload = multer({ dest: 'uploads/' });
 allroutes.post('/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
