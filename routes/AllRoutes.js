@@ -337,6 +337,116 @@ function recommendFds(age, amount, termYears) {
 
 //fd end
 
+// mf start
+
+let mutualFundsData = {};
+async function fetchAllMFCSVData() {
+  const fileMappings = {
+    mutualFunds: "mutual_funds_data - Main.csv", 
+  };
+
+   
+
+  for (const [key, fileName] of Object.entries(fileMappings)) {
+    const csvDocument = await csvFile.findOne({ fileName });
+
+    if (csvDocument) {
+      mutualFundsData[key] = csvDocument.data; 
+      console.log(`${fileName} data loaded successfully!`);
+    } else {
+      console.warn(`CSV file "${fileName}" not found in the database.`);
+    }
+  }
+}
+
+async function recommendMutualFunds(userInput) {
+  await fetchAllMFCSVData();
+  const { user_age, user_risk_appetite } = userInput;
+  
+  console.log(Object.values(mutualFundsData))
+
+  let filteredData = Object.values(mutualFundsData).filter(
+    (fund) => fund["Risk"] === user_risk_appetite
+  );
+
+  filteredData = filteredData.sort((a, b) => {
+    return (
+      b["Sharpe"] - a["Sharpe"] ||
+      b["Alpha"] - a["Alpha"] ||
+      a["Beta"] - b["Beta"] ||
+      a["Expense ratio"] - b["Expense ratio"] ||
+      a["Standard Deviation"] - b["Standard Deviation"]
+    );
+  });
+
+  let recommendedFunds;
+  if (18 <= user_age && user_age < 30) {
+    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === "Very High").slice(0, 2);
+    const otherFunds = filteredData.filter((fund) => !highRiskFunds.includes(fund)).slice(0, 1);
+    recommendedFunds = [...highRiskFunds, ...otherFunds];
+  } else if (30 <= user_age && user_age <= 50) {
+    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === "Very High").slice(0, 1);
+    const otherFunds = filteredData.filter((fund) => !highRiskFunds.includes(fund)).slice(0, 2);
+    recommendedFunds = [...highRiskFunds, ...otherFunds];
+  } else {
+    recommendedFunds = filteredData.filter((fund) => fund["Risk"] !== "Very High").slice(0, 3);
+  }
+
+  console.log("recommendedFunds : ",recommendedFunds)
+
+  return recommendedFunds;
+}
+
+async function getRecommendationFromGroq(userInput, recommendations) {
+  const { user_age, user_risk_appetite, user_income, user_savings, user_investment_amount } = userInput;
+
+  const prompt = `
+    I want to invest in mutual funds. I am ${user_age} years old. I have a ${user_risk_appetite} risk appetite.
+    I earn ${user_income} INR per month. I save ${user_savings} INR per month. From the savings amount, I want to
+    invest ${user_investment_amount} INR per month. Analyze these mutual funds and suggest only one mutual fund.
+    Give me reasons behind your suggestion.
+
+    ${JSON.stringify(recommendations, null, 2)}`;
+
+  try {
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+    });
+
+    return chatCompletion.choices[0]?.message?.content || "No response received.";
+  } catch (error) {
+    console.error("Error communicating with Groq API:", error);
+  }
+}
+
+
+
+
+allroutes.post("/recommend-mutual-funds", async (req, res) => {
+  const userInput = req.body;
+
+  if (!userInput) {
+    return res.status(400).json({ error: "Invalid input: User data is required" });
+  }
+
+  try {
+    const recommendations = recommendMutualFunds(userInput);
+
+    const groqResponse = await getRecommendationFromGroq(userInput, recommendations);
+
+    res.json({
+      recommendations,
+      groqRecommendation: groqResponse,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+// mf end
+
 const jwt = require('jsonwebtoken');
 const admin = require('firebase-admin');
 
