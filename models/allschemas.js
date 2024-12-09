@@ -34,16 +34,15 @@ let UserDataSchema = new mongoose.Schema({
     savings: { type: String, default: '' }
 });
 
-const csvfile = new mongoose.Schema({
+  const csvfile = new mongoose.Schema({
     fileName: { type: String, required: true },
     data: { type: Array, required: true }
 }, { timestamps: true });
 
-const csvFile = mongoose.model('Data', csvfile);
+  const csvFile = mongoose.model('Data', csvfile);
 
-let UserData = mongoose.model('UserData', UserDataSchema);
-
-
-let Signup = mongoose.model('signup', signup);
-
-module.exports = { Signup, UserData,csvFile};
+  const UserData = mongoose.model('UserData', UserDataSchema);
+  
+  let Signup = mongoose.model('signup', signup);
+  
+  module.exports = { Signup, UserData,csvFile};
