@@ -10,9 +10,9 @@ const allroutes = express.Router();
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 
-const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
+const dotenv = require("dotenv");
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
@@ -327,50 +327,50 @@ function recommendFds(age, amount, termYears) {
   }
 }
 
-allroutes.post("/fdrecommendations", async (req, res) => {
-  const userInput = req.body;
-  const { age, amount, termYears } = userInput;
+// allroutes.post("/fdrecommendations", async (req, res) => {
+//   const userInput = req.body;
+//   const { age, amount, termYears } = userInput;
 
-  if (!age || !amount || !termYears) {
-    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
-  }
+//   if (!age || !amount || !termYears) {
+//     return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
+//   }
 
-  try {
-    const recommendationDetails = recommendFds(age, amount, termYears);
-    const bestRecommendation = recommendationDetails[0];
-    const prompt = `
-      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
-      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
+//   try {
+//     const recommendationDetails = recommendFds(age, amount, termYears);
+//     const bestRecommendation = recommendationDetails[0];
+//     const prompt = `
+//       I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
+//       Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
 
-      FD Option:
-      - Bank Name: ${bestRecommendation.bank}
-      - Interest Rate: ${bestRecommendation.interestRate}%
-      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
-      - Reason: ${bestRecommendation.reason}
+//       FD Option:
+//       - Bank Name: ${bestRecommendation.bank}
+//       - Interest Rate: ${bestRecommendation.interestRate}%
+//       - Maturity Amount: INR ${bestRecommendation.maturityAmount}
+//       - Reason: ${bestRecommendation.reason}
 
-      Please explain why this is the best choice.`;
+//       Please explain why this is the best choice.`;
 
-    const response = await groq.chat.completions.create({
-      messages: [{ role: "user", content: prompt }],
-      model: "llama3-8b-8192",
-    });
+//     const response = await groq.chat.completions.create({
+//       messages: [{ role: "user", content: prompt }],
+//       model: "llama3-8b-8192",
+//     });
 
-    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+//     const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
 
-    res.json({
-      bestRecommendation: {
-        bank: bestRecommendation.bank,
-        interestRate: bestRecommendation.interestRate,
-        maturityAmount: bestRecommendation.maturityAmount,
-        reason: bestRecommendation.reason
-      },
-      groqRecommendation
-    });
+//     res.json({
+//       bestRecommendation: {
+//         bank: bestRecommendation.bank,
+//         interestRate: bestRecommendation.interestRate,
+//         maturityAmount: bestRecommendation.maturityAmount,
+//         reason: bestRecommendation.reason
+//       },
+//       groqRecommendation
+//     });
 
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 //fd end
 
