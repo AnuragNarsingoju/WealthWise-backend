@@ -8,6 +8,7 @@ const allroutes = express.Router();
 const upload = multer();
 
 
+
 // chatbot 
 const { Pinecone } = require('@pinecone-database/pinecone');
 const { PineconeStore } = require("@langchain/pinecone");
@@ -16,8 +17,23 @@ const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 
+let retriever=null;
+async function get_retriever() {
+    const PINECONE_INDEX = "knowledge-retrival";
+    const pinecone = new Pinecone();
+    const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+    const embeddings = new PineconeEmbeddings({
+      model: "multilingual-e5-large",
+    });
+    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+      pineconeIndex,
+      maxConcurrency: 5,
+    });
+    retriever = vectorStore.asRetriever();
+}
+get_retriever();
+
 async function chat(Question) {
-  console.log(Question)
   try {
     const llm = new ChatGroq({
       model: "llama3-8b-8192",
@@ -25,22 +41,7 @@ async function chat(Question) {
       maxTokens: undefined,
       maxRetries: 5,
     });
-
-    const PINECONE_INDEX = "knowledge-retrival";
-    const pinecone = new Pinecone();
-    const pineconeIndex = pinecone.Index(PINECONE_INDEX);
-
-    const embeddings = new PineconeEmbeddings({
-      model: "multilingual-e5-large",
-    });
-
-    const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-      pineconeIndex,
-      maxConcurrency: 5,
-    });
-
-    const retriever = vectorStore.asRetriever();
-
+    
     const generateQueries = async (question) => {
       try {
         const prompt = PromptTemplate.fromTemplate(
