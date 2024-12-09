@@ -15,18 +15,23 @@
     "@pinecone-database/pinecone": "^4.0.0",
     "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
+    "csv-parser": "^3.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "firebase-admin": "^12.4.0",
+    "fs": "^0.0.1-security",
+    "groq-sdk": "^0.9.0",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.6",
     "mongoose": "^8.2.4",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.0",
+    "path": "^0.12.7",
     "pinecone": "^0.1.0"
   }
 }
