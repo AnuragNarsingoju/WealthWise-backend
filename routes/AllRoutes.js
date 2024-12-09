@@ -4,11 +4,10 @@ const express = require("express");
 const axios = require('axios');
 const mongoose = require('mongoose');
 const {  Signup,UserData, csvFile } = require("../models/allschemas");
-const allroutes = express.Router();
 const multer = require("multer");
+const allroutes = express.Router();
 const csvtojson = require('csvtojson');
-const fs = require('fs');
-
+const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
@@ -22,19 +21,6 @@ const { PineconeEmbeddings } = require("@langchain/pinecone");
 const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
-
-
-const jwt = require('jsonwebtoken');
-const admin = require('firebase-admin');
-
-
-const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
-const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
-admin.initializeApp({
-  credential: admin.credential.cert(credentials)
-});
-
-
 
 let retriever=null;
 async function get_retriever() {
@@ -136,7 +122,7 @@ async function chat(Question) {
 
 
     const topDocuments = await reciprocalRankFusion(allDocuments);
-    //(topDocuments)
+    //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
@@ -157,7 +143,7 @@ async function chat(Question) {
       question: Question,
       context: topDocuments
     });
-    //(finalPrompt)
+    //console.log(finalPrompt)
     const outputParser = new StringOutputParser();
     const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
     return finalOutput.content;
@@ -170,37 +156,6 @@ async function chat(Question) {
 //chat bot end
 
 //fd start
-
-async function fetchAllCSVData() {
-  const fileMappings = {
-      taxSavingFd: "tax_fd.csv",
-      seniorPublicFd: "senior_public.csv",
-      seniorPrivateFd: "senior_private.csv",
-      comparisonPublicFd: "public_sector_banks.csv",
-      comparisonPrivateFd: "private_sector_banks.csv",
-  };
-  const results = {};
-  for (const [key, fileName] of Object.entries(fileMappings)) {
-      const csvDocument = await csvFile.findOne({ fileName });
-      if (csvDocument) {
-          results[key] = csvDocument.data;
-      } else {
-          console.warn(`CSV file "${fileName}" not found in the database.`);
-      }
-  }
-
-  return results;
-}
-
-// (async () => {
-//     try {
-//         const allCSVData = await fetchAllCSVData();
-//     } catch (error) {
-//         console.error("Error:", error.message);
-//     }
-// })();
-
-
 
 const groq = new Groq({ apiKey: "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"});
 
@@ -364,11 +319,22 @@ function recommendFds(age, amount, termYears) {
     });
 
   } else {
+    console.log("No recommendations available for the given inputs.");
     return [];
   }
 }
 
 //fd end
+
+const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
+
+
+const base64Credentials = process.env.FIREBASE_CREDENTIALS_BASE64;
+const credentials = JSON.parse(Buffer.from(base64Credentials, 'base64').toString('utf8'));
+admin.initializeApp({
+  credential: admin.credential.cert(credentials)
+});
 
 
 allroutes.post("/fdrecommendations", async (req, res) => {
@@ -642,7 +608,6 @@ allroutes.post('/upload', upload.single('file'), async (req, res) => {
       res.status(500).json({ message: "Failed to process file", error: error.message });
   }
 });
-
 
 
 module.exports = allroutes;
