@@ -10,7 +10,6 @@ const allroutes = express.Router();
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 
-const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
@@ -176,202 +175,202 @@ function calculateMaturity(principal, rate, termYears) {
 }
 
 
-// function loadAndCleanData() {
-//   const filePaths = {
-//     taxSavingFd: "../data/tax_fd.csv",
-//     seniorPublicFd: "../data/senior_public.csv",
-//     seniorPrivateFd: "../data/senior_private.csv",
-//     comparisonPublicFd: "../data/public_sector_banks.csv",
-//     comparisonPrivateFd: "../data/private_sector_banks.csv",
-//   };
+function loadAndCleanData() {
+  const filePaths = {
+    taxSavingFd: "../data/tax_fd.csv",
+    seniorPublicFd: "../data/senior_public.csv",
+    seniorPrivateFd: "../data/senior_private.csv",
+    comparisonPublicFd: "../data/public_sector_banks.csv",
+    comparisonPrivateFd: "../data/private_sector_banks.csv",
+  };
 
-//   Object.entries(filePaths).forEach(([key, filePath]) => {
-//     datasets[key] = [];
-//     fs.createReadStream(path.join(__dirname, filePath))
-//       .pipe(csv())
-//       .on("data", (row) => {
-//         if (key === "taxSavingFd") {
-//           row["General Citizens"] = row["General Citizens"]
-//             ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
+  Object.entries(filePaths).forEach(([key, filePath]) => {
+    datasets[key] = [];
+    fs.createReadStream(path.join(__dirname, filePath))
+      .pipe(csv())
+      .on("data", (row) => {
+        if (key === "taxSavingFd") {
+          row["General Citizens"] = row["General Citizens"]
+            ? parseFloat(row["General Citizens"].replace(/[^0-9.]/g, "")) || 0
+            : undefined;
 
-//           row["Senior Citizens"] = row["Senior Citizens"]
-//             ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
-//             : undefined;
-//         } else {
-//           Object.keys(row).forEach((col) => {
-//             if (col === "3-years tenure") {
-//               row["3-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//             if (col === "5-years tenure") {
-//               row["5-year tenure"] = row[col];
-//               delete row[col];
-//             }
-//           });
+          row["Senior Citizens"] = row["Senior Citizens"]
+            ? parseFloat(row["Senior Citizens"].replace(/[^0-9.]/g, "")) || 0
+            : undefined;
+        } else {
+          Object.keys(row).forEach((col) => {
+            if (col === "3-years tenure") {
+              row["3-year tenure"] = row[col];
+              delete row[col];
+            }
+            if (col === "5-years tenure") {
+              row["5-year tenure"] = row[col];
+              delete row[col];
+            }
+          });
 
-//           ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
-//             if (row[col]) {
-//               row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
-//             }
-//           });
-//         }
+          ["Highest slab", "1-year tenure", "3-year tenure", "5-year tenure"].forEach((col) => {
+            if (row[col]) {
+              row[col] = parseFloat(row[col].replace(/[^0-9.]/g, ""));
+            }
+          });
+        }
 
-//         datasets[key].push(row);
-//       })
-//       .on("end", () => {
-//         if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
-//           datasets[key].forEach(row => {
-//             delete row["General Citizens"];
-//             delete row["Senior Citizens"];
-//           });
-//         }
-//       });
-//   });
-// }
-// loadAndCleanData();
+        datasets[key].push(row);
+      })
+      .on("end", () => {
+        if (key === "seniorPublicFd" || key === "seniorPrivateFd") {
+          datasets[key].forEach(row => {
+            delete row["General Citizens"];
+            delete row["Senior Citizens"];
+          });
+        }
+      });
+  });
+}
+loadAndCleanData();
 
-// function recommendFds(age, amount, termYears) {
-//   const taxSavingFd = datasets.taxSavingFd;
-//   const seniorPublicFd = datasets.seniorPublicFd;
-//   const seniorPrivateFd = datasets.seniorPrivateFd;
-//   const comparisonPublicFd = datasets.comparisonPublicFd;
-//   const comparisonPrivateFd = datasets.comparisonPrivateFd;
+function recommendFds(age, amount, termYears) {
+  const taxSavingFd = datasets.taxSavingFd;
+  const seniorPublicFd = datasets.seniorPublicFd;
+  const seniorPrivateFd = datasets.seniorPrivateFd;
+  const comparisonPublicFd = datasets.comparisonPublicFd;
+  const comparisonPrivateFd = datasets.comparisonPrivateFd;
 
-//   let recommendations = [];
+  let recommendations = [];
 
-//   if (age > 60 && amount <= 150000) {
-//     taxSavingFd.forEach((fd) => {
-//       const maturityAmount = calculateMaturity(amount, fd['Senior Citizens'], termYears);
-//       fd['Maturity Amount'] = maturityAmount;
-//     });
+  if (age > 60 && amount <= 150000) {
+    taxSavingFd.forEach((fd) => {
+      const maturityAmount = calculateMaturity(amount, fd['Senior Citizens'], termYears);
+      fd['Maturity Amount'] = maturityAmount;
+    });
 
-//     recommendations = taxSavingFd
-//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-//       .slice(0, 3);
+    recommendations = taxSavingFd
+      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+      .slice(0, 3);
 
-//     return recommendations.map((fd) => {
-//       return {
-//         bank: fd['Banks'],
-//         interestRate: fd['Senior Citizens'],
-//         maturityAmount: fd['Maturity Amount'],
-//         reason: "Tax Saving FD for Senior Citizens"
-//       };
-//     });
+    return recommendations.map((fd) => {
+      return {
+        bank: fd['Banks'],
+        interestRate: fd['Senior Citizens'],
+        maturityAmount: fd['Maturity Amount'],
+        reason: "Tax Saving FD for Senior Citizens"
+      };
+    });
 
-//   } else if (age <= 60 && amount <= 150000) {
-//     taxSavingFd.forEach((fd) => {
-//       const maturityAmount = calculateMaturity(amount, fd['General Citizens'], termYears);
-//       fd['Maturity Amount'] = maturityAmount;
-//     });
+  } else if (age <= 60 && amount <= 150000) {
+    taxSavingFd.forEach((fd) => {
+      const maturityAmount = calculateMaturity(amount, fd['General Citizens'], termYears);
+      fd['Maturity Amount'] = maturityAmount;
+    });
 
-//     recommendations = taxSavingFd
-//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-//       .slice(0, 3);
+    recommendations = taxSavingFd
+      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+      .slice(0, 3);
 
-//     return recommendations.map((fd) => {
-//       return {
-//         bank: fd['Banks'],
-//         interestRate: fd['General Citizens'],
-//         maturityAmount: fd['Maturity Amount'],
-//         reason: "Tax Saving FD for General Citizens"
-//       };
-//     });
+    return recommendations.map((fd) => {
+      return {
+        bank: fd['Banks'],
+        interestRate: fd['General Citizens'],
+        maturityAmount: fd['Maturity Amount'],
+        reason: "Tax Saving FD for General Citizens"
+      };
+    });
 
-//   } else if (age > 60 && amount > 150000) {
-//     const seniorFd = seniorPublicFd.concat(seniorPrivateFd);
-//     seniorFd.forEach((fd) => {
-//       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
-//       const maturityAmount = calculateMaturity(amount, averageRate, termYears);
-//       fd['Average Rate (%)'] = averageRate;
-//       fd['Maturity Amount'] = maturityAmount;
-//     });
+  } else if (age > 60 && amount > 150000) {
+    const seniorFd = seniorPublicFd.concat(seniorPrivateFd);
+    seniorFd.forEach((fd) => {
+      const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
+      const maturityAmount = calculateMaturity(amount, averageRate, termYears);
+      fd['Average Rate (%)'] = averageRate;
+      fd['Maturity Amount'] = maturityAmount;
+    });
 
-//     recommendations = seniorFd
-//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-//       .slice(0, 3);
+    recommendations = seniorFd
+      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+      .slice(0, 3);
 
-//     return recommendations.map((fd) => {
-//       return {
-//         bank: fd['Bank Name'],
-//         interestRate: fd['Average Rate (%)'],
-//         maturityAmount: fd['Maturity Amount'],
-//         reason: "Senior Citizen FD (Public & Private Banks)"
-//       };
-//     });
+    return recommendations.map((fd) => {
+      return {
+        bank: fd['Bank Name'],
+        interestRate: fd['Average Rate (%)'],
+        maturityAmount: fd['Maturity Amount'],
+        reason: "Senior Citizen FD (Public & Private Banks)"
+      };
+    });
 
-//   } else if (age <= 60 && amount > 150000) {
-//     const comparisonFd = comparisonPublicFd.concat(comparisonPrivateFd);
-//     comparisonFd.forEach((fd) => {
-//       const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
-//       const maturityAmount = calculateMaturity(amount, averageRate, termYears);
-//       fd['Average Rate (%)'] = averageRate;
-//       fd['Maturity Amount'] = maturityAmount;
-//     });
+  } else if (age <= 60 && amount > 150000) {
+    const comparisonFd = comparisonPublicFd.concat(comparisonPrivateFd);
+    comparisonFd.forEach((fd) => {
+      const averageRate = (fd['1-year tenure'] + fd['3-year tenure'] + fd['5-year tenure']) / 3;
+      const maturityAmount = calculateMaturity(amount, averageRate, termYears);
+      fd['Average Rate (%)'] = averageRate;
+      fd['Maturity Amount'] = maturityAmount;
+    });
 
-//     recommendations = comparisonFd
-//       .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
-//       .slice(0, 3);
+    recommendations = comparisonFd
+      .sort((a, b) => b['Maturity Amount'] - a['Maturity Amount'])
+      .slice(0, 3);
 
-//     return recommendations.map((fd) => {
-//       return {
-//         bank: fd['Public Sector Banks'] || fd['Private Sector Banks'],
-//         interestRate: fd['Average Rate (%)'],
-//         maturityAmount: fd['Maturity Amount'],
-//         reason: "Comparison FD (Public & Private Banks)"
-//       };
-//     });
+    return recommendations.map((fd) => {
+      return {
+        bank: fd['Public Sector Banks'] || fd['Private Sector Banks'],
+        interestRate: fd['Average Rate (%)'],
+        maturityAmount: fd['Maturity Amount'],
+        reason: "Comparison FD (Public & Private Banks)"
+      };
+    });
 
-//   } else {
-//     console.log("No recommendations available for the given inputs.");
-//     return [];
-//   }
-// }
+  } else {
+    console.log("No recommendations available for the given inputs.");
+    return [];
+  }
+}
 
-// allroutes.post("/fdrecommendations", async (req, res) => {
-//   const userInput = req.body;
-//   const { age, amount, termYears } = userInput;
+allroutes.post("/fdrecommendations", async (req, res) => {
+  const userInput = req.body;
+  const { age, amount, termYears } = userInput;
 
-//   if (!age || !amount || !termYears) {
-//     return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
-//   }
+  if (!age || !amount || !termYears) {
+    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
+  }
 
-//   try {
-//     const recommendationDetails = recommendFds(age, amount, termYears);
-//     const bestRecommendation = recommendationDetails[0];
-//     const prompt = `
-//       I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
-//       Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
+  try {
+    const recommendationDetails = recommendFds(age, amount, termYears);
+    const bestRecommendation = recommendationDetails[0];
+    const prompt = `
+      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
+      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
 
-//       FD Option:
-//       - Bank Name: ${bestRecommendation.bank}
-//       - Interest Rate: ${bestRecommendation.interestRate}%
-//       - Maturity Amount: INR ${bestRecommendation.maturityAmount}
-//       - Reason: ${bestRecommendation.reason}
+      FD Option:
+      - Bank Name: ${bestRecommendation.bank}
+      - Interest Rate: ${bestRecommendation.interestRate}%
+      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
+      - Reason: ${bestRecommendation.reason}
 
-//       Please explain why this is the best choice.`;
+      Please explain why this is the best choice.`;
 
-//     const response = await groq.chat.completions.create({
-//       messages: [{ role: "user", content: prompt }],
-//       model: "llama3-8b-8192",
-//     });
+    const response = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+    });
 
-//     const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
 
-//     res.json({
-//       bestRecommendation: {
-//         bank: bestRecommendation.bank,
-//         interestRate: bestRecommendation.interestRate,
-//         maturityAmount: bestRecommendation.maturityAmount,
-//         reason: bestRecommendation.reason
-//       },
-//       groqRecommendation
-//     });
+    res.json({
+      bestRecommendation: {
+        bank: bestRecommendation.bank,
+        interestRate: bestRecommendation.interestRate,
+        maturityAmount: bestRecommendation.maturityAmount,
+        reason: bestRecommendation.reason
+      },
+      groqRecommendation
+    });
 
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 //fd end
 
