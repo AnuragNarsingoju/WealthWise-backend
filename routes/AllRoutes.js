@@ -5,7 +5,7 @@ const axios = require('axios');
 const mongoose = require('mongoose');
 const {  Signup,UserData, csvFile } = require("../models/allschemas");
 const allroutes = express.Router();
-
+const multer = require("multer");
 const csvtojson = require('csvtojson');
 const fs = require('fs');
 
@@ -123,7 +123,7 @@ async function chat(Question) {
 
 
     const topDocuments = await reciprocalRankFusion(allDocuments);
-    //console.log(topDocuments)
+    //(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
@@ -144,7 +144,7 @@ async function chat(Question) {
       question: Question,
       context: topDocuments
     });
-    //console.log(finalPrompt)
+    //(finalPrompt)
     const outputParser = new StringOutputParser();
     const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
     return finalOutput.content;
@@ -182,7 +182,6 @@ async function fetchAllCSVData() {
 (async () => {
     try {
         const allCSVData = await fetchAllCSVData();
-        console.log("Fetched All CSV Data:", allCSVData);
     } catch (error) {
         console.error("Error:", error.message);
     }
@@ -352,7 +351,6 @@ function recommendFds(age, amount, termYears) {
     });
 
   } else {
-    console.log("No recommendations available for the given inputs.");
     return [];
   }
 }
@@ -630,10 +628,9 @@ allroutes.post('/upload', upload.single('file'), async (req, res) => {
       if (existingDocument) {
           existingDocument.data = jsonArray;
           await existingDocument.save();
-          console.log(`Replaced data for file: ${fileName}`);
       } else {
           await csvFile.create({ fileName, data: jsonArray });
-          console.log(`Inserted new data for file: ${fileName}`);
+
       }
       fs.unlinkSync(req.file.path);
       res.status(200).json({ message: `Data from ${fileName} successfully processed` });
