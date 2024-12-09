@@ -116,7 +116,6 @@ async function chat(Question) {
     };
 
     const subQuestions = await generateQueries();
-    //  console.log(subQuestions)
 
 
     const allDocuments = await retrieveDocuments(subQuestions);
@@ -124,7 +123,6 @@ async function chat(Question) {
 
 
     const topDocuments = await reciprocalRankFusion(allDocuments);
-    //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidlines:
@@ -325,6 +323,54 @@ function recommendFds(age, amount, termYears) {
     return [];
   }
 }
+
+
+allroutes.post("/fdrecommendations", async (req, res) => {
+  const userInput = req.body;
+  const { age, amount, termYears } = userInput;
+
+  if (!age || !amount || !termYears) {
+    return res.status(400).json({ error: "Invalid input: Age, amount, and termYears are required" });
+  }
+
+  try {
+    const recommendationDetails = recommendFds(age, amount, termYears);
+    console.log(recommendationDetails);
+
+    const bestRecommendation = recommendationDetails[0]; 
+    const prompt = `
+      I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
+      Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
+
+      FD Option:
+      - Bank Name: ${bestRecommendation.bank}
+      - Interest Rate: ${bestRecommendation.interestRate}%
+      - Maturity Amount: INR ${bestRecommendation.maturityAmount}
+      - Reason: ${bestRecommendation.reason}
+
+      Please explain why this is the best choice.`;
+
+    const response = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192",
+    });
+
+    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+
+    res.json({
+      bestRecommendation: {
+        bank: bestRecommendation.bank,
+        interestRate: bestRecommendation.interestRate,
+        maturityAmount: bestRecommendation.maturityAmount,
+        reason: bestRecommendation.reason
+      },
+      groqRecommendation
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 //fd end
 
