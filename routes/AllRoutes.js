@@ -342,35 +342,41 @@ function recommendFds(age, amount, termYears) {
 let mutualFundsData = {};
 async function fetchAllMFCSVData() {
   const fileMappings = {
-    mutualFunds: "mutual_funds_data - Main.csv", 
+    mutualFunds: "mutual_funds_data - Main.csv",
   };
 
-   
-
   for (const [key, fileName] of Object.entries(fileMappings)) {
-    const csvDocument = await csvFile.findOne({ fileName });
-
-    if (csvDocument) {
-      mutualFundsData[key] = csvDocument.data; 
-      // console.log(⁠ ${fileName} data loaded successfully! ⁠);
-    } else {
-      console.log(⁠ "CSV file  not found in the database. ⁠");
-        
+    try {
+      const csvDocument = await csvFile.findOne({ fileName });
+      if (csvDocument && csvDocument.data) {
+        mutualFundsData[key] = csvDocument.data;
+        console.log(`${fileName} data loaded successfully!`);
+      } else {
+        console.error(`CSV file ${fileName} not found or has no data.`);
+      }
+    } catch (error) {
+      console.error(`Error loading ${fileName}:`, error.message);
     }
   }
 }
 
 async function recommendMutualFunds(userInput) {
   await fetchAllMFCSVData();
+
   const { user_age, user_risk_appetite } = userInput;
 
-  console.log(Object.values(mutualFundsData)[0][0]["Risk"])
   let allFunds = Object.values(mutualFundsData).flat();
+  if (!allFunds || allFunds.length === 0) {
+    throw new Error("No mutual funds data available.");
+  }
 
-  // Filter funds by risk
   let filteredData = allFunds.filter(
     (fund) => fund["Risk"] === user_risk_appetite
   );
+
+  if (filteredData.length === 0) {
+    throw new Error("No funds match the given risk appetite.");
+  }
 
   filteredData = filteredData.sort((a, b) => {
     return (
@@ -417,14 +423,10 @@ async function getRecommendationFromGroq(userInput, recommendations) {
 
     return chatCompletion.choices[0]?.message?.content || "No response received.";
   } catch (error) {
-    console.error("Error communicating with Groq API:", error);
+    console.error("Error communicating with Groq API:", error.message);
+    return "Unable to get a recommendation at this time.";
   }
 }
-
-
-
-
-
 
 allroutes.post("/recommend-mutual-funds", async (req, res) => {
   const userInput = req.body;
@@ -434,8 +436,7 @@ allroutes.post("/recommend-mutual-funds", async (req, res) => {
   }
 
   try {
-    const recommendations = recommendMutualFunds(userInput);
-
+    const recommendations = await recommendMutualFunds(userInput); // Added await
     const groqResponse = await getRecommendationFromGroq(userInput, recommendations);
 
     res.json({
@@ -443,11 +444,10 @@ allroutes.post("/recommend-mutual-funds", async (req, res) => {
       groqRecommendation: groqResponse,
     });
   } catch (error) {
+    console.error("Error in recommendation route:", error.message);
     res.status(500).json({ error: error.message });
   }
 });
-
-
 // mf end
 
 const jwt = require('jsonwebtoken');
