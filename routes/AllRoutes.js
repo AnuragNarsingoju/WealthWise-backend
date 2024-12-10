@@ -354,7 +354,8 @@ async function fetchAllMFCSVData() {
       mutualFundsData[key] = csvDocument.data; 
       // console.log(⁠ ${fileName} data loaded successfully! ⁠);
     } else {
-      console.warn(⁠ CSV file "${fileName}" not found in the database. ⁠);
+      console.log(⁠ "CSV file  not found in the database. ⁠");
+        
     }
   }
 }
