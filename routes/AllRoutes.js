@@ -461,7 +461,7 @@ admin.initializeApp({
 });
 
 
-allroutespost("/fdrecommendations", async (req, res) => {
+allroutes.post("/fdrecommendations", async (req, res) => {
   const userInput = req.body;
   const { age, amount, termYears } = userInput;
 
