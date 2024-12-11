@@ -461,7 +461,7 @@ admin.initializeApp({
 });
 
 
-allroutes.post("/fdrecommendations", async (req, res) => {
+allroutespost("/fdrecommendations", async (req, res) => {
   const userInput = req.body;
   const { age, amount, termYears } = userInput;
 
@@ -471,6 +471,7 @@ allroutes.post("/fdrecommendations", async (req, res) => {
 
   try {
     const recommendationDetails = recommendFds(age, amount, termYears);
+
     const bestRecommendation = recommendationDetails[0];
     const prompt = `
       I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
@@ -482,15 +483,15 @@ allroutes.post("/fdrecommendations", async (req, res) => {
       - Maturity Amount: INR ${bestRecommendation.maturityAmount}
       - Reason: ${bestRecommendation.reason}
 
-      Please explain why this is the best choice.`;
+      Please explain why this is the best choice in 500 to 600 characters, starting with the bank name, maturity amount, and reasons for selection.`;
 
     const response = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama3-8b-8192",
     });
 
-    const groqRecommendation = response.choices[0]?.message?.content || "No response received.";
-
+    let groqRecommendation = response.choices[0]?.message?.content || "No response received.";
+    groqRecommendation = groqRecommendation.slice(0, 600);
     res.json({
       bestRecommendation: {
         bank: bestRecommendation.bank,
