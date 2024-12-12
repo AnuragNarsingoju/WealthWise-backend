@@ -15,6 +15,18 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
+const cron = require('node-cron');
+
+
+cron.schedule('0 0 1 * *', async () => {
+  try {
+      console.log('Resetting count for all users...');
+      await Signup.updateMany({}, { count: 0 });
+      console.log('Count reset successfully for all users.');
+  } catch (error) {
+      console.error('Error resetting count:', error.message);
+  }
+});
 
 // chatbot 
 const { Pinecone } = require('@pinecone-database/pinecone');
