@@ -14,6 +14,7 @@ let signup = new mongoose.Schema({
     timestamps: true 
 });
 
+
 let UserDataSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     income: { type: Number, required: true },
@@ -29,9 +30,10 @@ let UserDataSchema = new mongoose.Schema({
     personalCare: { type: String, default: '' },
     apparelAndServices: { type: String, default: '' },
     tobaccoProducts: { type: String, default: '' },
-    cashContributions: { type: String, default: '' },
+    personalfinance: { type: String, default: '' },
     alcoholicBeverages: { type: String, default: '' },
-    savings: { type: String, default: '' }
+    savings: { type: String, default: '' },
+    others:{ type: String, default: '' }
 });
 
   const csvfile = new mongoose.Schema({
