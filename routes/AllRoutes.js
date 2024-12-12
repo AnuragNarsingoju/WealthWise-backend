@@ -714,6 +714,7 @@ allroutes.post('/submitdata', async (req, res) => {
         alcoholicBeverages: formData.alcoholicBeverages || '',
         savings: formData.savings || '',
         others: formData.others || '',
+        date: new Date(),
       });
 
       await newData.save();
