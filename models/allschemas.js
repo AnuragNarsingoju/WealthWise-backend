@@ -33,7 +33,11 @@ let UserDataSchema = new mongoose.Schema({
     personalfinance: { type: String, default: '' },
     alcoholicBeverages: { type: String, default: '' },
     savings: { type: String, default: '' },
-    others:{ type: String, default: '' }
+    others:{ type: String, default: '' },
+    date: {
+        type: Date,
+        default: Date.now
+    }
 });
 
   const csvfile = new mongoose.Schema({
