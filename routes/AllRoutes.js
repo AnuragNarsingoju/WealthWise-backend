@@ -631,7 +631,7 @@ allroutes.get('/findmail', async (req, res) => {
       return res.status(404).json({ message: 'No user found with this email' });
     }
     
-    return res.status(200).json({ message: 'User found', count: newUser.count });
+    return res.status(200).json({ message: 'User found' });
   } catch (e) {
     console.error(e); 
     return res.status(400).json({ error: e.message });
