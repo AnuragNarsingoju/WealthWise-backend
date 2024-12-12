@@ -696,7 +696,7 @@ allroutes.post('/submitdata', async (req, res) => {
     } else {
       // Create new data
       const newData = new UserData({
-        email,
+        email: formData.email || '',
         income: formData.income || '',
         age: formData.age || '',
         city: formData.city || '',
