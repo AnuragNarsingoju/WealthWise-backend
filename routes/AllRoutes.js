@@ -639,58 +639,77 @@ allroutes.post('/submitdata', async (req, res) => {
   }
 
   try {
-    if (!formData.email || !formData.income || !formData.age || !formData.city) {
+
+    const { email, income, age, city } = formData;
+    if (!email || !income || !age || !city) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-      
-    const existingData = await UserData.findOne({ email: formData.email });
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const existingData = await UserData.findOne({
+      email,
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+    });
+
     if (existingData) {
-      existingData.income = formData.income;
-      existingData.age = formData.age;
-      existingData.city = formData.city;
-      existingData.foodAtHome = formData.foodAtHome;
-      existingData.foodAwayFromHome = formData.foodAwayFromHome;
-      existingData.housing = formData.housing;
-      existingData.transportation = formData.transportation;
-      existingData.healthcare = formData.healthcare;
-      existingData.education = formData.education;
-      existingData.entertainment = formData.entertainment;
-      existingData.personalCare = formData.personalCare;
-      existingData.apparelAndServices = formData.apparelAndServices;
-      existingData.tobaccoProducts = formData.tobaccoProducts;
-      existingData.cashContributions = formData.cashContributions;
-      existingData.alcoholicBeverages = formData.alcoholicBeverages;
-      existingData.savings = formData.savings;
+      Object.assign(existingData, {
+        income:formData.income || existingData.income,
+        age:formData.age || existingData.age,
+        city:formData.city || existingData.city,
+        foodAtHome: formData.foodAtHome || existingData.foodAtHome,
+        foodAwayFromHome: formData.foodAwayFromHome || existingData.foodAwayFromHome,
+        housing: formData.housing || existingData.housing,
+        transportation: formData.transportation || existingData.transportation,
+        healthcare: formData.healthcare || existingData.healthcare,
+        education: formData.education || existingData.education,
+        entertainment: formData.entertainment || existingData.entertainment,
+        personalCare: formData.personalCare || existingData.personalCare,
+        apparelAndServices: formData.apparelAndServices || existingData.apparelAndServices,
+        tobaccoProducts: formData.tobaccoProducts || existingData.tobaccoProducts,
+        personalfinance: formData.personalfinance || existingData.personalfinance,
+        alcoholicBeverages: formData.alcoholicBeverages || existingData.alcoholicBeverages,
+        savings: formData.savings || existingData.savings,
+        others: formData.others || existingData.others,
+      });
+
       await existingData.save();
       return res.status(200).json({ message: 'Data updated successfully', data: existingData });
     } else {
+      // Create new data
       const newData = new UserData({
-        email: formData.email,
-        income: formData.income,
-        age: formData.age,
-        city: formData.city,
-        foodAtHome: formData.foodAtHome,
-        foodAwayFromHome: formData.foodAwayFromHome,
-        housing: formData.housing,
-        transportation: formData.transportation,
-        healthcare: formData.healthcare,
-        education: formData.education,
-        entertainment: formData.entertainment,
-        personalCare: formData.personalCare,
-        apparelAndServices: formData.apparelAndServices,
-        tobaccoProducts: formData.tobaccoProducts,
-        cashContributions: formData.cashContributions,
-        alcoholicBeverages: formData.alcoholicBeverages,
-        savings: formData.savings
+        email,
+        income: formData.income || '',
+        age: formData.age || '',
+        city: formData.city || '',
+        foodAtHome: formData.foodAtHome || '',
+        foodAwayFromHome: formData.foodAwayFromHome || '',
+        housing: formData.housing || '',
+        transportation: formData.transportation || '',
+        healthcare: formData.healthcare || '',
+        education: formData.education || '',
+        entertainment: formData.entertainment || '',
+        personalCare: formData.personalCare || '',
+        apparelAndServices: formData.apparelAndServices || '',
+        tobaccoProducts: formData.tobaccoProducts || '',
+        personalfinance: formData.personalfinance || '',
+        alcoholicBeverages: formData.alcoholicBeverages || '',
+        savings: formData.savings || '',
+        others: formData.others || '',
       });
 
       await newData.save();
       return res.status(201).json({ message: 'Data saved successfully', data: newData });
     }
-
   } catch (error) {
     console.error('Error saving or updating data:', error.message);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 
