@@ -625,7 +625,6 @@ allroutes.get('/findemail', async (req, res) => {
 
 allroutes.get('/findmail', async (req, res) => {
   const { email } = req.query;
-
   try {
     const newUser = await Signup.findOne({ email: email });
     if (!newUser) {
