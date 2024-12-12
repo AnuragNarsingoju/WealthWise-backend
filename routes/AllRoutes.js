@@ -657,18 +657,19 @@ allroutes.post('/submitdata', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    endOfMonth.setHours(23, 59, 59, 999);
+  
     const existingData = await UserData.findOne({
       email,
       date: {
-        $gte: startOfDay,
-        $lte: endOfDay,
+        $gte: startOfMonth,
+        $lte: endOfMonth,
       },
-    });
+});
 
     if (existingData) {
       Object.assign(existingData, {
