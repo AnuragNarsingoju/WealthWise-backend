@@ -628,7 +628,7 @@ allroutes.get('/findmail', async (req, res) => {
   try {
     const newUser = await Signup.findOne({ email: email });
     if (!newUser) {
-      return res.status(404).json({ message: 'No user found with this email' });
+       return res.status(200).json({ message: 'User found', count: newUser.count });
     }
     
     return res.status(200).json({ message: 'User found' });
