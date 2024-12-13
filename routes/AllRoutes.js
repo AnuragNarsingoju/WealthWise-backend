@@ -748,18 +748,14 @@ allroutes.get('/getData', async (req, res) => {
     const email = req.query.email;
     console.log(email)
     const userData = await UserData.find({ email }); 
-    const formattedData = {
-      dates: userData.map(item => ({
-        ...item.toObject(),
-        Date: new Date(item.Date).toISOString().split('T')[0], 
-      }))
-    };
-    res.json(formattedData); 
+  
+    res.json(userData); 
   } catch (error) {
     console.error("Error fetching user data:", error);
     res.status(500).send("Internal Server Error");
   }
 });
+
 
 allroutes.post('/chatbot4', async (req, res) => {
   const { question } = req.body;
