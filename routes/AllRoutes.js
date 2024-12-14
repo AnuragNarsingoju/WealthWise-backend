@@ -483,20 +483,16 @@ allroutes.post("/fdrecommendations", async (req, res) => {
 
   try {
     const recommendationDetails = recommendFds(age, amount, termYears);
-
     const bestRecommendation = recommendationDetails[0];
     const prompt = `
       I am ${age} years old and want to invest ${amount} INR for ${termYears} years.
       Based on the following FD option, suggest the best one and explain why it is the best choice given my age, amount, and tenure:
-
       FD Option:
       - Bank Name: ${bestRecommendation.bank}
       - Interest Rate: ${bestRecommendation.interestRate}%
       - Maturity Amount: INR ${bestRecommendation.maturityAmount}
       - Reason: ${bestRecommendation.reason}
-
       Please explain why this is the best choice in 500 to 600 characters, starting with the bank name, maturity amount, and reasons for selection.`;
-
     const response = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
       model: "llama3-8b-8192",
@@ -518,7 +514,6 @@ allroutes.post("/fdrecommendations", async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 allroutes.post('/login', async (req, res) => {
   try {
