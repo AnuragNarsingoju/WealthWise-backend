@@ -35,6 +35,7 @@ let UserDataSchema = new mongoose.Schema({
     savings: { type: String, default: '' },
     others:{ type: String, default: '' },
     llm:{ type: String},
+    month:{ type: String, required: true },
     date: {
         type: Date,
         default: Date.now
@@ -47,7 +48,7 @@ let UserDataSchema = new mongoose.Schema({
 }, { timestamps: true });
 
   const csvFile = mongoose.model('Data', csvfile);
-  // UserDataSchema.index({ email: 1, date: 1 }, { unique: true });
+  UserDataSchema.index({ email: 1, month: 1 }, { unique: true });
   const UserData = mongoose.model('UserData', UserDataSchema);
   
   let Signup = mongoose.model('signup', signup);
