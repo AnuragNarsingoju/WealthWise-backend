@@ -768,6 +768,154 @@ allroutes.post('/chatbot4', async (req, res) => {
   }
 });
 
+
+allroutes.post('/getAnalysis', (req, res) => {
+  const { salary, age, cityType, userExpenses } = req.body;
+  try {
+      class BudgetReportGenerator {
+          static BENCHMARK_EXPENSES = {
+              foodAtHome: 9.8,
+              foodAwayFromHome: 5.9,
+              alcoholicBeverages: 0.6,
+              housing: 24,
+              apparelAndServices: 2,
+              transportation: 12,
+              healthCare: 6,
+              entertainment: 3.5,
+              personalCare: 1,
+              education: 2,
+              tobacco: 0.5,
+              other: 1.5,
+              personalFinanceAndPensions: 10,
+              savings: 22
+          };
+          static CITY_MULTIPLIERS = {
+              metro: 1.3,
+              tier1: 1.15,
+              tier2: 1,
+              tier3: 0.85,
+              rural: 0.7
+          };
+          static AGE_MULTIPLIERS = {
+              '18-25': 0.9,
+              '26-35': 1.1,
+              '36-45': 1.2,
+              '46-55': 1.0,
+              '56-65': 0.8,
+              '65+': 0.7
+          };
+          constructor(salary, age, cityType) {
+              this.salary = parseFloat(salary);
+              this.age = parseInt(age);
+              this.cityType = (cityType && cityType.toLowerCase()) || 'tier2';
+          }
+          _getAgeGroup() {
+              if (this.age >= 18 && this.age <= 25) return '18-25';
+              if (this.age >= 26 && this.age <= 35) return '26-35';
+              if (this.age >= 36 && this.age <= 45) return '36-45';
+              if (this.age >= 46 && this.age <= 55) return '46-55';
+              if (this.age >= 56 && this.age <= 65) return '56-65';
+              return '65+';
+          }
+          generateBenchmarkExpenses() {
+              const cityMultiplier = BudgetReportGenerator.CITY_MULTIPLIERS[this.cityType] || 1;
+              const ageMultiplier = BudgetReportGenerator.AGE_MULTIPLIERS[this._getAgeGroup()] || 1;
+
+              const benchmarkExpenses = {};
+
+              for (const [category, percentage] of Object.entries(BudgetReportGenerator.BENCHMARK_EXPENSES)) {
+                  const baseAmount = this.salary * (percentage / 100);
+                  const adjustedAmount = baseAmount * cityMultiplier * ageMultiplier;
+
+                  benchmarkExpenses[category] = {
+                      percentage: percentage,
+                      amount: Math.round(adjustedAmount)
+                  };
+              }
+              return benchmarkExpenses;
+          }
+          compareExpenses(userExpenses) {
+              const benchmarkExpenses = this.generateBenchmarkExpenses();
+              const comparisonReport = {};
+
+              for (const [category, benchmarkData] of Object.entries(benchmarkExpenses)) {
+                  const userExpense = userExpenses[category] || 0;
+
+                  comparisonReport[category] = {
+                      benchmark: benchmarkData.amount,
+                      userExpense: userExpense,
+                      difference: userExpense - benchmarkData.amount,
+                      variancePercentage: Math.round((userExpense / benchmarkData.amount - 1) * 100)
+                  };
+              }
+              return comparisonReport;
+          }
+          generateWhatIfScenarios() {
+              const scenarios = {
+                  saveMore: {
+                      title: "Aggressive Savings Scenario",
+                      description: "Reduce discretionary expenses and increase savings",
+                      savings: Math.round(this.salary * 0.3)
+                  },
+                  emergencyFund: {
+                      title: "Emergency Fund Building",
+                      description: "Create a 6-month emergency fund",
+                      monthlyContribution: Math.round(this.salary * 0.2)
+                  },
+                  investmentGrowth: {
+                      title: "Long-term Investment Growth",
+                      description: "Potential investment returns over 10 years",
+                      annualInvestment: Math.round(this.salary * 0.15),
+                      projectedGrowth: Math.round(this.salary * 0.15 * 10 * 1.12)
+                  }
+              };
+              return scenarios;
+          }
+
+          generateReport(userExpenses) {
+              return {
+                  salaryDetails: {
+                      monthlySalary: this.salary,
+                      ageGroup: this._getAgeGroup(),
+                      cityType: this.cityType
+                  },
+                  expensesComparison: this.compareExpenses(userExpenses),
+              };
+          }
+          generateInsights(userExpenses) {
+              const comparisonReport = this.compareExpenses(userExpenses);
+              const insights = [];
+              for (const [category, comparison] of Object.entries(comparisonReport)) {
+                  if (Math.abs(comparison.variancePercentage) > 30) {
+                      insights.push({
+                          category: category,
+                          type: comparison.variancePercentage > 0 ? 'overspending' : 'underspending',
+                          message: `Your ${category} expenses are ${Math.abs(comparison.variancePercentage)}% ${comparison.variancePercentage > 0 ? 'higher' : 'lower'} than recommended.`
+                      });
+                  }
+              }
+              return insights;
+          }
+      }
+      if (!salary || !age || !cityType || !userExpenses) {
+          return res.status(400).json({ message: 'Missing required fields' });
+      }
+      const reportGenerator = new BudgetReportGenerator(salary, age, cityType);
+      const report = reportGenerator.generateReport(userExpenses);
+      const insights = reportGenerator.generateInsights(userExpenses);
+
+      res.status(200).json({
+          report,
+          insights,
+          scenarios: reportGenerator.generateWhatIfScenarios()
+      });
+  } catch (e) {
+      res.status(500).json({ message: "Failed to Get Analysis", error: e.message });
+  }
+});
+
+
+
 allroutes.post('/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
