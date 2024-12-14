@@ -34,6 +34,7 @@ let UserDataSchema = new mongoose.Schema({
     alcoholicBeverages: { type: String, default: '' },
     savings: { type: String, default: '' },
     others:{ type: String, default: '' },
+    llm:{ type: String},
     date: {
         type: Date,
         default: Date.now
