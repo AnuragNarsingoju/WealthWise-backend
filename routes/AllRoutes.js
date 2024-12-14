@@ -769,8 +769,9 @@ allroutes.post('/chatbot4', async (req, res) => {
 });
 
 
-allroutes.post('/getAnalysis', (req, res) => {
-  const { salary, age, cityType, userExpenses } = req.body;
+allroutes.post('/getAnalysis', async(req, res) => {
+  const { salary, age, cityType, userExpenses,data } = req.body;
+  
   try {
       class BudgetReportGenerator {
           static BENCHMARK_EXPENSES = {
@@ -904,15 +905,170 @@ allroutes.post('/getAnalysis', (req, res) => {
       const report = reportGenerator.generateReport(userExpenses);
       const insights = reportGenerator.generateInsights(userExpenses);
 
-      res.status(200).json({
-          report,
-          insights,
-          scenarios: reportGenerator.generateWhatIfScenarios()
-      });
+
+      const llmdata = {
+        report,
+        insights,
+        scenarios: reportGenerator.generateWhatIfScenarios()
+      }
+
+      const expenseAnalysis = async () => {
+        const Question  = llmdata;
+        try {
+            const llm = new ChatGroq({
+                model: "llama3-8b-8192",
+                temperature: 0,
+                maxTokens: undefined,
+                maxRetries: 5,
+            });
+    
+            const generateQueries = async (data) => {
+                try {
+                    const template = PromptTemplate.fromTemplate(
+                                            `You are a helpful assistant tasked with generating multiple sub-questions related to a given input question.
+                        The goal is to break down the input question into a set of sub-problems or sub-questions that can be used to fetch documents from a vector store.
+                        Provide the questions in the following structured format, starting with a number followed by a period and a space, then the question text, ending with a question mark. Limit the output to 10 questions, each on a new line.
+                        
+                        Example Output:
+                        
+                        1. How can the user categorize their spending to identify unnecessary expenses?
+                        2. What steps can the user take to create a personalized savings plan?
+                        3. How can the user track their expenses to ensure they stick to a budget?
+                        4. What tools or apps can the user use to automate their budgeting process?
+                        5. How can the user identify patterns in their spending habits over time?
+                        6. What are some practical ways to reduce fixed monthly expenses?
+                        7. How can the user allocate their income to achieve specific savings goals?
+                        8. What role do emergency funds play in effective money management?
+                        9. How can the user balance spending on necessities and leisure?
+                        10. How can the user set realistic financial goals based on their current spending analysis?
+                        
+                        Search queries related to: {data}:
+                      `
+                    );
+    
+                    const formattedPrompt = await template.format({ data: data });
+                    const response = await llm.invoke(formattedPrompt);
+                    const outputParser = new StringOutputParser();
+                    const parsedOutput = await outputParser.parse(response);
+                    const queries = parsedOutput.content.match(/^\d+\.\s.*?\?$/gm);
+                    
+                    return queries || [];
+                } catch (error) {
+                    console.error("Error generating queries:", error);
+                    return [];
+                }
+            };
+    
+            const retrieveDocuments = async (subQuestions) => {
+                try {
+    
+                    const results = await Promise.all(
+                        subQuestions.map((q) => retriever2.invoke(q))
+                    );
+                    return results;
+                } catch (error) {
+                    console.error("Error retrieving documents:", error);
+                    return [];
+                }
+            };
+    
+            const reciprocalRankFusion = async (results, k = 60) => {
+                try {
+                    const fusedScores = new Map();
+    
+                    results.forEach((docs) => {
+                        docs.forEach((doc, rank) => {
+                            const docStr = JSON.stringify(doc);
+                            if (!fusedScores.has(docStr)) {
+                                fusedScores.set(docStr, 0);
+                            }
+                            fusedScores.set(
+                                docStr,
+                                fusedScores.get(docStr) + 1 / (rank + k)
+                            );
+                        });
+                    });
+    
+                    return Array.from(fusedScores.entries())
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 5)
+                        .map(([docStr]) => JSON.parse(docStr));
+                } catch (error) {
+                    console.error("Error in reciprocal rank fusion:", error);
+                    return [];
+                }
+            };
+    
+            const subQuestions = await generateQueries(Question);
+    
+            const allDocuments = await retrieveDocuments(subQuestions);
+            const topDocuments = await reciprocalRankFusion(allDocuments);
+            console.log(topDocuments);
+    
+    
+            const finalTemplate = PromptTemplate.fromTemplate(
+              `user expenses data : {user_expenses_data}
+              
+              Objective: Create an engaging financial narrative with actionable strategies based on user data.
+              
+              Guidance Requirements:
+              Personalized Financial Story
+              
+              Narrate the user’s financial journey, linking spending to values and goals.
+              Identify turning points, opportunities, and highlight surprising insights.
+              Tailored Budgeting Techniques
+              
+              Provide personality-driven approaches (e.g., analytical, visual learners, tech-savvy).
+              Include innovative methods like 50/30/20, zero-based, reverse, or adaptive budgeting.
+              Explain why they work, step-by-step implementation, and challenges.
+              Advanced Saving Strategies
+              
+              Suggest micro-savings, gamification, automated savings, and reward-based methods.
+              Core Purpose: Transform data into a motivating, personalized financial narrative that inspires action, empowers the user, and provides clear, practical steps toward financial growth and security.
+              
+              also use below context for giving response . context : {context}`
+            );
+            const finalPrompt = await finalTemplate.format({
+                user_expenses_data: Question,
+                context: topDocuments
+            });
+            const outputParser = new StringOutputParser();
+            const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
+            return (finalOutput.content);
+        } catch (error) {
+            console.error("Error in chat function:", error);
+            return "An error occurred while processing your request.";
+        }
+    }
+
+    const userData = await UserData.findOne({ _id: data._id });
+    let llmres;
+    if (!userData) {
+        console.error("User data not found.");
+        return;
+    }
+    if (!userData.llm || userData.llm === "") {
+        llmres = await expenseAnalysis(); 
+        userData.llm = llmres; 
+        await userData.save(); 
+    } else {
+        llmres = userData.llm;
+    }
+
+    const resopnse = {
+      report,
+      insights,
+      scenarios: reportGenerator.generateWhatIfScenarios(),
+      llmres
+    }
+    res.status(200).json({
+      resopnse
+    });
   } catch (e) {
       res.status(500).json({ message: "Failed to Get Analysis", error: e.message });
   }
 });
+
 
 
 
