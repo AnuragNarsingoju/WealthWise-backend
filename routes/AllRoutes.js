@@ -674,17 +674,10 @@ allroutes.post('/submitdata', async (req, res) => {
     }
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    endOfMonth.setHours(23, 59, 59, 999);
-  
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;  
     const existingData = await UserData.findOne({
       email,
-      date: {
-        $gte: startOfMonth,
-        $lte: endOfMonth,
-      },
+      month
 });
 
     if (existingData) {
@@ -712,6 +705,8 @@ allroutes.post('/submitdata', async (req, res) => {
       return res.status(200).json({ message: 'Data updated successfully', data: existingData });
     } else {
       // Create new data
+      const now = new Date();
+      const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const newData = new UserData({
         email: formData.email || '',
         income: formData.income || '',
@@ -732,6 +727,7 @@ allroutes.post('/submitdata', async (req, res) => {
         savings: formData.savings || '',
         others: formData.others || '',
         date: new Date(),
+        month:month
       });
 
       await newData.save();
