@@ -48,7 +48,7 @@ let UserDataSchema = new mongoose.Schema({
 
   const csvFile = mongoose.model('Data', csvfile)
       ;
-  UserDataSchema.index({ email: 1, month: 1 }, { unique: true });
+  UserDataSchema.index({ email: 1, date: 1 }, { unique: true });
   const UserData = mongoose.model('UserData', UserDataSchema);
   
   let Signup = mongoose.model('signup', signup);
