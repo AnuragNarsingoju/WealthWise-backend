@@ -37,10 +37,7 @@ let UserDataSchema = new mongoose.Schema({
     llm:{ type: String},
     date: {
         type: Date,
-        default: () => {
-            const today = new Date();
-            return new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        }
+        default: Date.now
     }
 });
 
@@ -50,7 +47,7 @@ let UserDataSchema = new mongoose.Schema({
 }, { timestamps: true });
 
   const csvFile = mongoose.model('Data', csvfile);
-  UserDataSchema.index({ email: 1, date: 1 }, { unique: true });
+  // UserDataSchema.index({ email: 1, date: 1 }, { unique: true });
   const UserData = mongoose.model('UserData', UserDataSchema);
   
   let Signup = mongoose.model('signup', signup);
