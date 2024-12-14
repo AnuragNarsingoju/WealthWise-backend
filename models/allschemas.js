@@ -37,7 +37,10 @@ let UserDataSchema = new mongoose.Schema({
     llm:{ type: String},
     date: {
         type: Date,
-        default: Date.now
+        default: () => {
+            const today = new Date();
+            return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        }
     }
 });
 
@@ -46,8 +49,7 @@ let UserDataSchema = new mongoose.Schema({
     data: { type: Array, required: true }
 }, { timestamps: true });
 
-  const csvFile = mongoose.model('Data', csvfile)
-      ;
+  const csvFile = mongoose.model('Data', csvfile);
   UserDataSchema.index({ email: 1, date: 1 }, { unique: true });
   const UserData = mongoose.model('UserData', UserDataSchema);
   
