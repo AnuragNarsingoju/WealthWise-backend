@@ -38,48 +38,115 @@ const { StringOutputParser } = require("@langchain/core/output_parsers");
 
 let retriever1=null;
 let retriever2=null;
+// async function get_retriever() {
+//     // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
+//     const PINECONE_API_KEY1 = process.env.PINECONE_API_KEY1; 
+//     const PINECONE_INDEX = "knowledge-retrival";
+//     const pinecone = new Pinecone();
+//     await pinecone.init({
+//       apiKey: PINECONE_API_KEY1,
+//       environment: process.env.PINECONE_ENVIRONMENT, 
+//     });
+//     const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+//     const embeddings = new PineconeEmbeddings({
+//       model: "multilingual-e5-large",
+//     });
+//     const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+//       pineconeIndex,
+//       maxConcurrency: 5,
+//     });
+//     retriever1 = vectorStore.asRetriever();
+//     // process.env.PINECONE_API_KEY= "";
+// }
+
 async function get_retriever() {
-    // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
-    const PINECONE_API_KEY1 = process.env.PINECONE_API_KEY1; 
-    const PINECONE_INDEX = "knowledge-retrival";
+    try {
+        const PINECONE_API_KEY1 = process.env.PINECONE_API_KEY1; 
+        const PINECONE_ENVIRONMENT = process.env.PINECONE_ENVIRONMENT; 
+        const PINECONE_INDEX = "knowledge-retrival"; 
+        if (!PINECONE_API_KEY1 || !PINECONE_ENVIRONMENT) {
+            throw new Error("Missing required Pinecone environment variables");
+        }
+        const pinecone = new Pinecone();
+        await pinecone.init({
+            apiKey: PINECONE_API_KEY1,
+            environment: PINECONE_ENVIRONMENT,
+        });
+        const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+        if (!pineconeIndex) {
+            throw new Error(`Index "${PINECONE_INDEX}" not found`);
+        }
+        const embeddings = new PineconeEmbeddings({
+            model: "multilingual-e5-large",
+        });
+        const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+            pineconeIndex,
+            maxConcurrency: 5,
+        });
+        const retriever1 = vectorStore.asRetriever();
+        return retriever1;
+    } catch (error) {
+        console.error("Error initializing retriever:", error.message);
+        throw error; // Re-throw error to handle it higher up
+    }
+}
+
+
+
+get_retriever();
+
+// async function get_retrieverExpense() {
+//   // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
+//   const PINECONE_API_KEY2 = process.env.PINECONE_API_KEY2; 
+//   const PINECONE_INDEX = "expense";
+//   const pinecone = new Pinecone();
+//   await pinecone.init({
+//     apiKey: PINECONE_API_KEY2,
+//     environment: process.env.PINECONE_ENVIRONMENT, 
+//   });
+//   const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+//   const embeddings = new PineconeEmbeddings({
+//     model: "multilingual-e5-large",
+//   });
+//   const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+//     pineconeIndex,
+//     maxConcurrency: 5,
+//   });
+//   retriever2 = vectorStore.asRetriever();
+//   process.env.PINECONE_API_KEY= "";
+
+// }
+
+async function get_retrieverExpense() {
+  try {
+    const PINECONE_API_KEY2 = process.env.PINECONE_API_KEY2; 
+    const PINECONE_INDEX = "expense";
+
+    if (!PINECONE_API_KEY2 || !process.env.PINECONE_ENVIRONMENT) {
+      throw new Error("Missing required environment variables.");
+    }
+
     const pinecone = new Pinecone();
     await pinecone.init({
-      apiKey: PINECONE_API_KEY1,
+      apiKey: PINECONE_API_KEY2,
       environment: process.env.PINECONE_ENVIRONMENT, 
     });
+
     const pineconeIndex = pinecone.Index(PINECONE_INDEX);
     const embeddings = new PineconeEmbeddings({
       model: "multilingual-e5-large",
     });
+
     const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
       pineconeIndex,
       maxConcurrency: 5,
     });
-    retriever1 = vectorStore.asRetriever();
-    // process.env.PINECONE_API_KEY= "";
-}
-get_retriever();
 
-async function get_retrieverExpense() {
-  // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
-  const PINECONE_API_KEY2 = process.env.PINECONE_API_KEY2; 
-  const PINECONE_INDEX = "expense";
-  const pinecone = new Pinecone();
-  await pinecone.init({
-    apiKey: PINECONE_API_KEY2,
-    environment: process.env.PINECONE_ENVIRONMENT, 
-  });
-  const pineconeIndex = pinecone.Index(PINECONE_INDEX);
-  const embeddings = new PineconeEmbeddings({
-    model: "multilingual-e5-large",
-  });
-  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
-    pineconeIndex,
-    maxConcurrency: 5,
-  });
-  retriever2 = vectorStore.asRetriever();
-  process.env.PINECONE_API_KEY= "";
-
+    retriever2 = vectorStore.asRetriever();
+  } catch (error) {
+    console.error("Error initializing retrieverExpense:", error);
+    throw error; 
+  }
 }
 get_retrieverExpense();
 
