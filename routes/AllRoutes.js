@@ -36,8 +36,10 @@ const { ChatGroq } = require("@langchain/groq");
 const { PromptTemplate } = require("@langchain/core/prompts");
 const { StringOutputParser } = require("@langchain/core/output_parsers");
 
-let retriever=null;
+let retriever1=null;
+let retriever2=null;
 async function get_retriever() {
+    process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
     const PINECONE_INDEX = "knowledge-retrival";
     const pinecone = new Pinecone();
     const pineconeIndex = pinecone.Index(PINECONE_INDEX);
@@ -48,9 +50,28 @@ async function get_retriever() {
       pineconeIndex,
       maxConcurrency: 5,
     });
-    retriever = vectorStore.asRetriever();
+    retriever1 = vectorStore.asRetriever();
+    process.env.PINECONE_API_KEY= "";
 }
 get_retriever();
+
+async function get_retrieverExpense() {
+  process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
+  const PINECONE_INDEX = "expense";
+  const pinecone = new Pinecone();
+  const pineconeIndex = pinecone.Index(PINECONE_INDEX);
+  const embeddings = new PineconeEmbeddings({
+    model: "multilingual-e5-large",
+  });
+  const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
+    pineconeIndex,
+    maxConcurrency: 5,
+  });
+  retriever2 = vectorStore.asRetriever();
+  process.env.PINECONE_API_KEY= "";
+
+}
+get_retrieverExpense();
 
 async function chat(Question) {
   try {
@@ -93,7 +114,7 @@ async function chat(Question) {
     const retrieveDocuments = async (subQuestions) => {
       try {
         const results = await Promise.all(
-          subQuestions.map((q) => retriever.invoke(q))
+          subQuestions.map((q) => retriever1.invoke(q))
         );
         return results;
       } catch (error) {
