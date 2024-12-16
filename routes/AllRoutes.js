@@ -40,7 +40,7 @@ let retriever1=null;
 let retriever2=null;
 async function get_retriever() {
     // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
-    // const PINECONE_API_KEY = process.env.PINECONE_API_KEY1; 
+    const PINECONE_API_KEY1 = process.env.PINECONE_API_KEY1; 
     const PINECONE_INDEX = "knowledge-retrival";
     const pinecone = new Pinecone();
     await pinecone.init({
@@ -62,7 +62,7 @@ get_retriever();
 
 async function get_retrieverExpense() {
   // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
-  // const PINECONE_API_KEY2 = process.env.PINECONE_API_KEY2; 
+  const PINECONE_API_KEY2 = process.env.PINECONE_API_KEY2; 
   const PINECONE_INDEX = "expense";
   const pinecone = new Pinecone();
   await pinecone.init({
