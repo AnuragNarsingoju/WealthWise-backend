@@ -1037,7 +1037,7 @@ allroutes.post('/getAnalysis', async(req, res) => {
               
               Suggest micro-savings, gamification, automated savings, and reward-based methods.
               Core Purpose: Transform data into a motivating, personalized financial narrative that inspires action, empowers the user, and provides clear, practical steps toward financial growth and security.
-              
+              Note: All monetary values and suggestions should be presented in Indian Rupees (₹) instead of dollars ($).
               also use below context for giving response . context : {context}`
             );
             const finalPrompt = await finalTemplate.format({
