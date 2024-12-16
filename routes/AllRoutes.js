@@ -937,25 +937,25 @@ allroutes.post('/getAnalysis', async(req, res) => {
             const generateQueries = async (data) => {
                 try {
                     const template = PromptTemplate.fromTemplate(
-                                            `You are a helpful assistant tasked with generating multiple sub-questions related to a given input question.
+                        `You are a helpful assistant tasked with generating multiple sub-questions related to a given input question.
                         The goal is to break down the input question into a set of sub-problems or sub-questions that can be used to fetch documents from a vector store.
                         Provide the questions in the following structured format, starting with a number followed by a period and a space, then the question text, ending with a question mark. Limit the output to 10 questions, each on a new line.
                         
                         Example Output:
                         
-                        1. How can the user categorize their spending to identify unnecessary expenses?
-                        2. What steps can the user take to create a personalized savings plan?
-                        3. How can the user track their expenses to ensure they stick to a budget?
-                        4. What tools or apps can the user use to automate their budgeting process?
-                        5. How can the user identify patterns in their spending habits over time?
-                        6. What are some practical ways to reduce fixed monthly expenses?
-                        7. How can the user allocate their income to achieve specific savings goals?
-                        8. What role do emergency funds play in effective money management?
-                        9. How can the user balance spending on necessities and leisure?
-                        10. How can the user set realistic financial goals based on their current spending analysis?
+                        1. How can the user categorize their spending to identify unnecessary expenses in rupees?
+                        2. What steps can the user take to create a personalized savings plan in rupees?
+                        3. How can the user track their expenses in rupees to ensure they stick to a budget?
+                        4. What tools or apps can the user use in India to automate their budgeting process?
+                        5. How can the user identify patterns in their spending habits over time in rupees?
+                        6. What are some practical ways to reduce fixed monthly expenses in India?
+                        7. How can the user allocate their income in rupees to achieve specific savings goals?
+                        8. What role do emergency funds play in effective money management in India?
+                        9. How can the user balance spending on necessities and leisure in rupees?
+                        10. How can the user set realistic financial goals in rupees based on their current spending analysis?
                         
                         Search queries related to: {data}:
-                      `
+                        `
                     );
     
                     const formattedPrompt = await template.format({ data: data });
