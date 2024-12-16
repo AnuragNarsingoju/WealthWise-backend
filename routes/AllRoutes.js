@@ -772,6 +772,7 @@ allroutes.get('/getData', async (req, res) => {
 allroutes.post('/chatbot4', async (req, res) => {
   const { question } = req.body;
   try {
+    question = question.toLowerCase();
     const answer = await chat(question);
     res.status(200).json({ answer });
 
