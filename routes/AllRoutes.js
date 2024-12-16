@@ -39,9 +39,9 @@ const { StringOutputParser } = require("@langchain/core/output_parsers");
 let retriever1=null;
 let retriever2=null;
 async function get_retriever() {
-    process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
+    // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY1;
     const PINECONE_INDEX = "knowledge-retrival";
-    const pinecone = new Pinecone();
+    const pinecone = new Pinecone(process.env.PINECONE_API_KEY1);
     const pineconeIndex = pinecone.Index(PINECONE_INDEX);
     const embeddings = new PineconeEmbeddings({
       model: "multilingual-e5-large",
@@ -56,9 +56,9 @@ async function get_retriever() {
 get_retriever();
 
 async function get_retrieverExpense() {
-  process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
+  // process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
   const PINECONE_INDEX = "expense";
-  const pinecone = new Pinecone();
+  const pinecone = new Pinecone(process.env.PINECONE_API_KEY2);
   const pineconeIndex = pinecone.Index(PINECONE_INDEX);
   const embeddings = new PineconeEmbeddings({
     model: "multilingual-e5-large",
