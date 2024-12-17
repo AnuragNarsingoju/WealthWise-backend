@@ -1119,7 +1119,7 @@ const postStockRecommendation = async (question) => {
   const url = 'https://700e-52-8-83-38.ngrok-free.app/stockRecommandation';
   try {
     const response = await axios.post(url, question);
-    return response.data.answer;
+    return response.data;
   } catch (error) {
     console.log("Error:", error);
     throw new Error("Error fetching stock recommendation");
