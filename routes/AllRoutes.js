@@ -1115,4 +1115,23 @@ allroutes.post('/upload', upload.single('file'), async (req, res) => {
 });
 
 
+const postStockRecommendation = async (question) => {
+  const url = 'https://14d0-52-8-83-38.ngrok-free.app/stockRecommandation';
+  try {
+    const response = await axios.post(url, question);
+    console.log('Response:', response.data);
+  } catch (error) {
+    console.log("hello", error);
+  }
+};
+allroutes.post('/PersonalizedStocks', async (req, res) => {
+  const { formData } = req.body;
+  try {
+    const answer = await postStockRecommendation(formData);
+    res.status(200).json({ answer });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = allroutes;
