@@ -1116,7 +1116,7 @@ allroutes.post('/upload', upload.single('file'), async (req, res) => {
 
 
 const postStockRecommendation = async (question) => {
-  const url = 'https://1d58-52-8-83-38.ngrok-free.app/stockRecommandation';
+  const url = 'https://6329-52-8-83-38.ngrok-free.app/stockRecommandation';
   try {
     const response = await axios.post(url, question);
     return response.data;
