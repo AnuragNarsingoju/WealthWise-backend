@@ -165,10 +165,10 @@ async function chat(Question) {
         1.⁠ ⁠A definition 
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
-        
+
+        IF THE QUESTION DOES NOT RELATE TO FINANACE OR PERSONAL FINANCE , RESPOND ONLY WITH: 'As an AI Chatbot, I cannot provide information on that topic.'
         give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian ruppess
-        If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.'
-        
+                
         Question: {question}
         Context: {context}
         `
