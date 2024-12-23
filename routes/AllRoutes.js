@@ -160,17 +160,16 @@ async function chat(Question) {
     //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
-      `you are an financial advisory helper which understands the provided context below and give a beautiful understandable respones to the user by following the below guidelines:
+      `you are an financial advisory helper chatbot "Niveshak" which understands the provided context below and give a beautiful understandable respones to the user by following the below guidelines:
+        Question: {question}
         **If the question does NOT relate to finance or personal finance, respond ONLY with: 'As an AI Chatbot, I cannot provide information on that topic.**'
+        **if the user question is realted to some greetings just greet them and
         If the question is related to finance, provide a comprehensive answer that include:
         1.⁠ ⁠A definition 
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
         
-        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian ruppess
-        
-        
-        Question: {question}
+        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian rupess
         Context: {context}
         `
     );
