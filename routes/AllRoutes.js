@@ -169,7 +169,7 @@ async function chat(Question) {
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
         
-        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply using below context and also remember do all calculations in indian rupess
+        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply required response. and use below context for replying and also remember do all calculations in indian rupess
         Context: {context}
         `
     );
