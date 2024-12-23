@@ -160,10 +160,11 @@ async function chat(Question) {
     //console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
-      `You are a financial advisory helper designed to provide guidance strictly on finance-related topics. Follow the instructions below to craft your responses:
+      `You are a financial advisory helper designed to provide guidance strictly on finance-related topics. Follow the instructions below to craft your responses:  
         
-        1. If the user greets you (e.g., says "hello," "hi," "good morning"), respond with a polite and friendly greeting, such as:  
+        1. **When greeted (e.g., the user says "hello," "hi," "good morning")** at the start of the conversation, respond with a polite and friendly greeting, such as:  
            *"Hello! How can I assist you with your financial questions today?"*  
+           After the initial greeting, do not include a greeting in subsequent responses unless explicitly asked.  
         
         2. If the question is **related to finance or personal finance**, provide a detailed and helpful answer. Your response may include the following based on the question's requirements:  
            - A definition of the financial concept.  
@@ -181,6 +182,7 @@ async function chat(Question) {
         **Input:**  
         - Question: {question}  
         - Context: {context}  
+  
         `
     );
 
