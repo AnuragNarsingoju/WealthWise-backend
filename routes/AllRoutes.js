@@ -232,7 +232,7 @@ async function loadAndCleanData() {
     }
   });
 
-  console.log("Data cleaned and processed:", datasets);
+  // console.log("Data cleaned and processed:", datasets);
 }
 
 loadAndCleanData();
@@ -352,7 +352,7 @@ async function fetchAllMFCSVData() {
 
     if (csvDocument) {
       mutualFundsData[key] = csvDocument.data; 
-      console.log(`${fileName} data loaded successfully!`);
+      // console.log(`${fileName} data loaded successfully!`);
     } else {
       console.warn(`CSV file "${fileName}" not found in the database.`);
     }
@@ -362,10 +362,12 @@ async function fetchAllMFCSVData() {
 async function recommendMutualFunds(userInput) {
   await fetchAllMFCSVData();
   const { user_age, user_risk_appetite } = userInput;
-  
-  console.log(Object.values(mutualFundsData))
 
-  let filteredData = Object.values(mutualFundsData).filter(
+  console.log(Object.values(mutualFundsData)[0][0]["Risk"])
+  let allFunds = Object.values(mutualFundsData).flat();
+
+  // Filter funds by risk
+  let filteredData = allFunds.filter(
     (fund) => fund["Risk"] === user_risk_appetite
   );
 
@@ -381,18 +383,16 @@ async function recommendMutualFunds(userInput) {
 
   let recommendedFunds;
   if (18 <= user_age && user_age < 30) {
-    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === "Very High").slice(0, 2);
+    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === 'High').slice(0, 2);
     const otherFunds = filteredData.filter((fund) => !highRiskFunds.includes(fund)).slice(0, 1);
     recommendedFunds = [...highRiskFunds, ...otherFunds];
   } else if (30 <= user_age && user_age <= 50) {
-    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === "Very High").slice(0, 1);
+    const highRiskFunds = filteredData.filter((fund) => fund["Risk"] === 'High').slice(0, 1);
     const otherFunds = filteredData.filter((fund) => !highRiskFunds.includes(fund)).slice(0, 2);
     recommendedFunds = [...highRiskFunds, ...otherFunds];
   } else {
-    recommendedFunds = filteredData.filter((fund) => fund["Risk"] !== "Very High").slice(0, 3);
+    recommendedFunds = filteredData.filter((fund) => fund["Risk"] !== 'High').slice(0, 3);
   }
-
-  console.log("recommendedFunds : ",recommendedFunds)
 
   return recommendedFunds;
 }
@@ -431,7 +431,9 @@ allroutes.post("/recommend-mutual-funds", async (req, res) => {
   }
 
   try {
-    const recommendations = recommendMutualFunds(userInput);
+    console.log('recommendor called')
+    const recommendations = await recommendMutualFunds(userInput);
+    console.log(recommendations)
 
     const groqResponse = await getRecommendationFromGroq(userInput, recommendations);
 
