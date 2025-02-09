@@ -388,13 +388,16 @@ async function fetchAllMFCSVData() {
   };
 
   for (const [key, fileName] of Object.entries(fileMappings)) {
-    const csvDocument = await csvFile.findOne({ fileName });
-
-    if (csvDocument) {
-      mutualFundsData[key] = csvDocument.data; 
-      console.log(`${fileName} data loaded successfully!`);
-    } else {
-      console.warn(`CSV file "${fileName}" not found in the database.`);
+    try {
+      const csvDocument = await csvFile.findOne({ fileName });
+      if (csvDocument && csvDocument.data) {
+        mutualFundsData[key] = csvDocument.data;
+        console.log(`${fileName} data loaded successfully!`);
+      } else {
+        console.error(`CSV file ${fileName} not found or has no data.`);
+      }
+    } catch (error) {
+      console.error(`Error loading ${fileName}:`, error.message);
     }
   }
 }
@@ -403,10 +406,13 @@ async function recommendMutualFunds(userInput) {
   await fetchAllMFCSVData();
 
   const { user_age, user_risk_appetite } = userInput;
-  
-  console.log(Object.values(mutualFundsData))
 
-  let filteredData = Object.values(mutualFundsData).filter(
+  let allFunds = Object.values(mutualFundsData).flat();
+  if (!allFunds || allFunds.length === 0) {
+    throw new Error("No mutual funds data available.");
+  }
+
+  let filteredData = allFunds.filter(
     (fund) => fund["Risk"] === user_risk_appetite
   );
 
@@ -472,8 +478,7 @@ allroutes.post("/recommend-mutual-funds", async (req, res) => {
   }
 
   try {
-    const recommendations = recommendMutualFunds(userInput);
-
+    const recommendations = await recommendMutualFunds(userInput); // Added await
     const groqResponse = await getRecommendationFromGroq(userInput, recommendations);
 
     res.json({
@@ -1137,6 +1142,32 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
     res.status(200).json({ answer }); 
   } catch (error) {
     res.status(400).json({ error: error.message }); 
+  }
+});
+
+allroutes.get("/nifty", async (req, res) => {
+  try {
+    const count = req.query.count;
+    console.log(count);
+    const response = await axios.get(
+      "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+          Referer: "https://www.nseindia.com/",
+          Cookie: process.env.NIFTY_COOKIE,
+        },
+      }
+    );
+    const data = response.data['NIFTY'].data;
+    // console.log(data);
+    const nifty20 = data.sort((a, b) => b.perChange - a.perChange);
+    console.log(nifty20);
+
+    res.json(nifty20.slice(0, count));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data", details: error.message });
   }
 });
 
