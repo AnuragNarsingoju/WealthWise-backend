@@ -201,7 +201,7 @@ async function chat(Question) {
 
 //fd start
 
-const groq = new Groq({ apiKey: "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"});
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 let datasets = {
   taxSavingFd: [],
