@@ -53,7 +53,7 @@ async function get_retriever() {
     retriever1 = vectorStore.asRetriever();
     process.env.PINECONE_API_KEY= "";
 }
-get_retriever();
+
 
 async function get_retrieverExpense() {
   process.env.PINECONE_API_KEY= process.env.PINECONE_API_KEY2;
@@ -71,12 +71,20 @@ async function get_retrieverExpense() {
   process.env.PINECONE_API_KEY= "";
 
 }
-get_retrieverExpense();
+
+
+async function getRetrivers(){
+  await get_retriever();
+  await get_retrieverExpense();
+
+}
+
+getRetrivers();
 
 async function chat(Question) {
   try {
     const llm = new ChatGroq({
-      model: "llama3-8b-8192",
+      model: "llama-3.3-70b-versatile",
       temperature: 0,
       maxTokens: undefined,
       maxRetries: 5,
@@ -151,13 +159,14 @@ async function chat(Question) {
     };
 
     const subQuestions = await generateQueries();
+    console.log(subQuestions)
 
     const allDocuments = await retrieveDocuments(subQuestions);
 
 
 
     const topDocuments = await reciprocalRankFusion(allDocuments);
-    //console.log(topDocuments)
+    // console.log(topDocuments)
 
     const template = PromptTemplate.fromTemplate(
       `you are an financial advisory helper chatbot "Niveshak" which understands the provided context below and give a beautiful understandable respones to the user by following the below guidelines:
@@ -169,7 +178,7 @@ async function chat(Question) {
         2.⁠ ⁠Real-life examples
         3.⁠ ⁠Personal finance calculations
         
-        give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply required response. and use below context for replying and also remember do all calculations in indian rupess
+        **give responses based on the question . you may include or exclude above points based on the question. if the question doesn't require these points then reply required response. and use below context for replying and also remember do all calculations in indian rupess
         Context: {context}
         `
     );
