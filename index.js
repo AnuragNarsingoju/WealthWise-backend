@@ -27,7 +27,7 @@ const validateOrigin = (req, res, next) => {
 };
 
 const authenticateToken = (req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/findmail' || req.path === '/api/signup'  ) {
+    if (req.path === '/api/login' || req.path === '/api/findemail' || req.path === '/api/signup'  ) {
         return next();
     }
     const authHeader = req.headers['authorization'];
