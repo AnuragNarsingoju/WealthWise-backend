@@ -16,7 +16,7 @@ const corsOptions = {
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 };
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 const validateOrigin = (req, res, next) => {
     const allowedOrigins = ['https://wealthwisee.vercel.app'];
@@ -27,7 +27,7 @@ const validateOrigin = (req, res, next) => {
 };
 
 const authenticateToken = (req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/findemail' || req.path === '/api/signup'  ) {
+    if (req.path === '/api/login' || req.path === '/api/findmail' || req.path === '/api/signup'  ) {
         return next();
     }
     const authHeader = req.headers['authorization'];
@@ -42,7 +42,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 
-// app.use(validateOrigin);
+app.use(validateOrigin);
 app.use(authenticateToken);
 
 
