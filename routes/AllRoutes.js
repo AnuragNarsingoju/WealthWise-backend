@@ -201,7 +201,7 @@ async function chat(Question) {
 
 //fd start
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: "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"});
 
 let datasets = {
   taxSavingFd: [],
@@ -274,7 +274,7 @@ async function loadAndCleanData() {
     }
   });
 
-  // console.log("Data cleaned and processed:", datasets);
+  console.log("Data cleaned and processed:", datasets);
 }
 
 loadAndCleanData();
@@ -1142,32 +1142,6 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
     res.status(200).json({ answer }); 
   } catch (error) {
     res.status(400).json({ error: error.message }); 
-  }
-});
-
-allroutes.get("/nifty", async (req, res) => {
-  try {
-    const count = req.query.count;
-    console.log(count);
-    const response = await axios.get(
-      "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-          Referer: "https://www.nseindia.com/",
-          Cookie: process.env.NIFTY_COOKIE,
-        },
-      }
-    );
-    const data = response.data['NIFTY'].data;
-    // console.log(data);
-    const nifty20 = data.sort((a, b) => b.perChange - a.perChange);
-    console.log(nifty20);
-
-    res.json(nifty20.slice(0, count));
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch data", details: error.message });
   }
 });
 
