@@ -1138,7 +1138,7 @@ const postStockRecommendation = async (question) => {
 
 allroutes.get("/nifty", async (req, res) => {
   try {
-    const count = req.query.count;
+    const count = parseInt(req.query.count, 10) || 10; 
     console.log(count);
     const response = await axios.get(
       "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
