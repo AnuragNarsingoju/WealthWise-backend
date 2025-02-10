@@ -1135,6 +1135,32 @@ const postStockRecommendation = async (question) => {
   }
 };
 
+
+allroutes.get("/nifty", async (req, res) => {
+  try {
+    const count = req.query.count;
+    console.log(count);
+    const response = await axios.get(
+      "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+          Referer: "https://www.nseindia.com/",
+          Cookie: ⁠ nseQuoteSymbols=[{"symbol":"DRREDDY","identifier":"","type":"equity"},{"symbol":"HCLTECH","identifier":"","type":"equity"},{"symbol":"POWERGRID","identifier":"","type":"equity"},{"symbol":"SUNPHARMA","identifier":"","type":"equity"},{"symbol":"TATACONSUM","identifier":"","type":"equity"}]; ak_bmsc=4C4324182FF7E53CA0514AAD48704B09~000000000000000000000000000000~YAAQRIgsMUrfq6yUAQAA2uJ66xo4mFXe5iJb8n3bpVN5tg1JQAgeWd4Sjna7uWlCq1l3UuCauchnZm2dC7Hx2l4c30GtjTZnalujCMe8yTim1s9bqDpeIr97H65iKathQirrng7LOYHOySY2L9KWybxSzctV3IA7GAIjSi5XwBqaLux457sPlQm8Xi4stU4KuyGBH1DFbNHzgBqQh874U7rud9uQS1zmFgD1fFEvi7tSu4bOk8JzuMjdOjXdvHDNd7uTicnzQ32QKU4EnyS4DzDIz5qpkSHhVB/RBWUjQxvEu+iXklQ3MiRu3wh++qMh+r0eccv+PmWVKRAkQW/P4nFiHMakJ9it9wOdopV3h8qsnnuEg7YITt9MD+DTv5AUmNVCmAZtzWQOZJ5r; AKA_A2=A; bm_mi=8252252A783C999C4BD87355428A99EB~YAAQFIgsMXM649aUAQAAxOS56xpmhc8VDuLmHhSe6ktjn61D1Jlm9CNx64bkjoW4Qdc0ArNZRBG7kpw9Zu0o04MehhwlznL5TIqpFLLQ9Jef8vMGuqSK97OPN4Y42f8eX/m/5WK/3foFo7JWDg4I8znYPFdcSHf45EV3KQ9kJlY0kAEiKAnGK2OucSwvjEgjO1WajJTHVjChtk1aE7D4o9Sq8/P3O1BFbbM4lHAK9lHnWbVQ2bC8FMvIVhGXCneMWSO3+PVhyzQVznzRJ5y5uvQ+gf0onwZAl/7N+fMVRZSCb7ADs2id3pSA9+VCHAXhYR84H2DeWNB42txViUyHWtux0ojJZc7KpyEbbOvX~1; _abck=8D076DF12145A2B37D551B19A15480AB~0~YAAQFIgsMZ4649aUAQAAZfC56w3iMTMQatkgR1OBYqxWyoAQprv5FV/HIcGmIabC3LHgSRvLsWABTSKIPUxEZtaaRo7Yjug9wDlEAmKDaffgPzwVtaqJVlMfV0smuyn1y/DKxK2myL0TmslrO68nKggvA9BZ9ddaKlVfMTdsSRpUSlIUAFl5Ct45iW7P86m1ZREpVsLf3O9QRrtk9UMqXzh40PJTL8EtqK99eJMwBBbnct4EoqWPx2GhO36VL9w0rJWSIHUhsQemEoY5EzPug0+J2T2XTv4QKWJxanMnmQy0cUlMLO8+nEUfBKx2cLOcDL3VbocilYG20/hQ8UVaZk4/BJvM/S8tGQxirGjIpNnTUkn6QTnI+fMtJkmuA0taq6g7FwFRnXTVMylSsvWW5uYpz4T2PpjfxSk3Rdpuln+qHOycClAThkobc6o1Fy5NNOdoj+lwMKesdm58OzshVMw5B5ToZKi2DO4aYOBxei9wCPRWV8vVZLxo9T6Y2w==~-1~-1~-1; nsit=73KczHo5E-sO9RfGwzQd0GQu; nseappid=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcGkubnNlIiwiYXVkIjoiYXBpLm5zZSIsImlhdCI6MTczOTEyMTYyMywiZXhwIjoxNzM5MTI4ODIzfQ.fBT1UrrqKaYyj9GWfBcRF1Fx1G_sUoNrsZHJSD78xkE; bm_sz=A68C6CD9D1FDF66ED9EDE47BFE668AF9~YAAQFIgsMb8649aUAQAAMgS66xo2lVSOFZGH0wNMpvBeOO+2R0DiW/KdwEOjKTYaCWc8BP3ion292JnIE3pu+Qz5FwU51lzval0hPBNbwxAqTes2jhBCnPlnE14BT4GeNKflvGXfFkS4w3L9DPpE3Fk5f+6wl3XBwlrDx1x/TAsTbOX5/nH6bmiBODBK6b5qVSVoypy1gx0sKalZdQV5DwVHRqWLZdf3nS8S/TpH+4Q57dVl6aCgV8BujDk4Y4STLzFq25bFiUGkMlM5yj7SgHUlP1Wopw6ebZfm/s2Y6J4TLhC8KNhorg0iarCid+CHKW/8QhCwtZ2M3+8iLJ/cmvDL2msrDLzWkKLT6AwN2taG966Ou0Pxc0WobIZ2S3YEq8wKmtwFqFt4Ar5Z6xNmECPATXOqqTkfOsqRqL6JmNwkeLAv~4470833~3551538; bm_sv=B35B4F4B24814160579FE065F5DA3C93~YAAQFIgsMco649aUAQAAeAm66xoBL8570j0HX2w6dwd/SeUDpo4cB/4VsiJwzC0/Z4kob47GUSqGivsK1jQDiT7t8Ow65X++EvwNiNuFWFp010l7+PLOzVMM6/tEPevn837yriKKWcacwZcTTk7tjS1R+HlSlNruL1grmwNAfx9i3hg+BtkbW5Q9olVxIW5Ie799L4gRw/mxLnj2JFWKhL/2JPTSUHpUV4kyHBuUhGneNsDFMvoii8KxS4sroudJB4Fe~1 ⁠,
+        },
+      }
+    );
+    const data = response.data['NIFTY'].data;
+    const nifty20 = data.sort((a, b) => b.perChange - a.perChange);
+    console.log(nifty20);
+
+    res.json(nifty20.slice(0, count));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data", details: error.message });
+  }
+});
+
 allroutes.post('/PersonalizedStocks', async (req, res) => {
   const { formData } = req.body;
   try {
