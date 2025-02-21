@@ -1135,7 +1135,7 @@ const postStockRecommendation = async (question) => {
 
 
 allroutes.post('/PersonalizedStocks', async (req, res) => {
-  const { formData } = req.body;
+  const { sendData } = req.body;
   try {
     const answer = await postStockRecommendation(formData); 
     res.status(200).json({ answer }); 
