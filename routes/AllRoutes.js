@@ -1145,28 +1145,35 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
 });
 
 
-allroutes.get("/nifty", async (req, res) => {
-  try {
-    const count = req.query.count;
-    const response = await axios.get(
-      "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
-      {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-          Referer: "https://www.nseindia.com/",
-          Cookie: process.env.NIFTY_COOKIE,
-        },
-      }
-    );
-    const data = response.data['NIFTY'].data;
-    const nifty20 = data.sort((a, b) => b.perChange - a.perChange);
-    console.log(nifty20);
+allroutes.get('/nifty', async (req, res) => {
+    try {
+        const count = req.query.count ? parseInt(req.query.count, 10) : 10; // Default to 10 if count is not provided
+        const response = await axios.get(
+            "https://www.nseindia.com/api/live-analysis-variations?index=gainers",
+            {
+                headers: {
+                    "User-Agent":
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+                    Referer: "https://www.nseindia.com/",
+                    Cookie: process.env.NIFTY_COOKIE,
+                },
+            }
+        );
 
-    res.json(nifty20.slice(0, count));
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch data", details: error.message });
-  }
+        if (!response.data || !response.data['NIFTY'] || !response.data['NIFTY'].data) {
+            throw new Error("Invalid data structure from NSE API");
+        }
+
+        const data = response.data['NIFTY'].data;
+        const sortedData = data.sort((a, b) => b.perChange - a.perChange);
+        console.log(sortedData);
+
+        res.json(sortedData.slice(0, count));
+    } catch (error) {
+        console.error("Error fetching data:", error.message);
+        res.status(500).json({ error: "Failed to fetch data", details: error.message });
+    }
 });
+
 
 module.exports = allroutes;
