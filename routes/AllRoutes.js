@@ -301,8 +301,8 @@ function recommendFds(age, amount, termYears) {
     return recommendations.map((fd) => {
       return {
         bank: fd['Banks'],
-        interestRate: fd['Senior Citizens'],
-        maturityAmount: fd['Maturity Amount'],
+        interestRate: parseFloat(fd['Senior Citizens'].toFixed(2)),
+        maturityAmount: parseFloat(fd['Maturity Amount'].toFixed(2)),
         reason: "Tax Saving FD for Senior Citizens"
       };
     });
@@ -320,8 +320,8 @@ function recommendFds(age, amount, termYears) {
     return recommendations.map((fd) => {
       return {
         bank: fd['Banks'],
-        interestRate: fd['General Citizens'],
-        maturityAmount: fd['Maturity Amount'],
+        interestRate: parseFloat(fd['General Citizens'].toFixed(2)),
+        maturityAmount: parseFloat(fd['Maturity Amount'].toFixed(2)),
         reason: "Tax Saving FD for General Citizens"
       };
     });
@@ -342,8 +342,8 @@ function recommendFds(age, amount, termYears) {
     return recommendations.map((fd) => {
       return {
         bank: fd['Bank Name'],
-        interestRate: fd['Average Rate (%)'],
-        maturityAmount: fd['Maturity Amount'],
+        interestRate: parseFloat(fd['Average Rate (%)'].toFixed(2)),
+        maturityAmount: parseFloat(fd['Maturity Amount'].toFixed(2)),
         reason: "Senior Citizen FD (Public & Private Banks)"
       };
     });
@@ -364,8 +364,8 @@ function recommendFds(age, amount, termYears) {
     return recommendations.map((fd) => {
       return {
         bank: fd['Public Sector Banks'] || fd['Private Sector Banks'],
-        interestRate: fd['Average Rate (%)'],
-        maturityAmount: fd['Maturity Amount'],
+        interestRate: parseFloat(fd['Average Rate (%)'].toFixed(2)),
+        maturityAmount: parseFloat(fd['Maturity Amount'].toFixed(2)),
         reason: "Comparison FD (Public & Private Banks)"
       };
     });
@@ -375,7 +375,6 @@ function recommendFds(age, amount, termYears) {
     return [];
   }
 }
-
 
 //fd end
 
