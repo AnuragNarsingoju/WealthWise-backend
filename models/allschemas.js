@@ -9,7 +9,13 @@ let signup = new mongoose.Schema({
     },
     "password": String,
     "profile": String,
-    "count": Number
+    "count": Number,
+    "balance": { type: Number, default: 3000 },
+    "pvalue": { type: Number, default: 0 },
+    "stocks": [{
+        symbol: String,
+        boughtPrice: Number
+    }]
 }, {
     timestamps: true 
 });
