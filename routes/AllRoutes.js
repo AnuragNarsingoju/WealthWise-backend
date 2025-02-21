@@ -17,7 +17,6 @@ const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
 const cron = require('node-cron');
 
-
 cron.schedule('0 0 1 * *', async () => {
   try {
       console.log('Resetting count for all users...');
