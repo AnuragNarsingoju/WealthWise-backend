@@ -12,7 +12,6 @@ const path = require("path");
 const csv = require("csv-parser");
 const Groq = require("groq-sdk");
 const bodyParser = require('body-parser');
-const fetch = require('node-fetch');
 require('dotenv').config();
 const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
@@ -1145,59 +1144,6 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
   }
 });
 
-
-allroutes.get('/nifty', async (req, res) => {
-    try {
-        const count = req.query.count ? parseInt(req.query.count, 10) : 10; // Default to 10 if count is not provided
-
-        const response = await fetch("https://www.nseindia.com/api/live-analysis-variations?index=gainers", {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-                "Referer": "https://www.nseindia.com",
-                "Accept": "application/json",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Cookie":"AKA_A2=A; _ga=GA1.1.1314985143.1740158230; nsit=c-c_DvdhlBvphjyGJm0reTQD; nseappid=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcGkubnNlIiwiYXVkIjoiYXBpLm5zZSIsImlhdCI6MTc0MDE1ODIzNSwiZXhwIjoxNzQwMTY1NDM1fQ.S-LNg-bbbs2yATekxT7M2DR4JrhgVG9SFQwHHpCYey8; bm_mi=7BFD4018820624EF0C57C6BE46A2F0F4~YAAQV7csMdYiIR+VAQAASXSDKRpRtJgtyuulUvFvNexJECFjQb2AV+fP20E8TK6VyRxdQofGDqn4MTIU8XS3zcMoMTehB77gG5QqTQ+rb92ZZmJezqBIXgFieZxaM7teCFwjMmTuHGhl1B7J18m3fS0uSvg3EtxjR/pljTMqtq3VatA1w4eaHmBmGV+cVNJiqyusJn7cyTv6VbWGR4R7efqGK/mymJUCvGmHVc1F6ZonIwDL3WpXuefr3XYoz7W79X2qOFE7tN+hZBxpm2IM9ND1XrCgLW9Ct0LpTUYlYggIuBcFRFjT6MY9AWIgwG7nv/6rg9ZlSZlN8vuKcK4CId5W7dsUrSEvxjKAGb4=~1; _ga_87M7PJ3R97=GS1.1.1740158229.1.1.1740158235.54.0.0; _ga_WM2NSQKJEK=GS1.1.1740158229.1.1.1740158235.0.0.0; ak_bmsc=0C34CF44DAC245F342D188F7ED7AFBC6~000000000000000000000000000000~YAAQV7csMR4jIR+VAQAAYXiDKRrEyKQTy2uGD/QN1DlW/WgWEPiprTVOZ9wQGyxa4fNhXchFTx6tj+vwOif9C4TxC2R6sAzg0KMLuCPsVPSvVYBEx30Fk4m8qDW+1w+5OgsJI3pa63ps6rfG0HpDpfNykRG48TgkgdYdf8yEw0TbCdB9BvAhrWzmBABWhoptsKmFdQ1gZOsKKr9NCtCmZXwK6IK+TzQEEtyXwysYSZSTMzHmEdZxH9Ua1L2SEV+mYki4JRXLsPDWsF0IGqN/8KGFO1zoC+5q2FazyhF3O8Zw4el/yO6t7e7HOcxMPoDPvdi0HyU7dyfmGAOnhd6HQkzG5Iv3v1faVtC2gSOvyyADg9OP0tUOS/HfXGViw1WlKRZ7Vyb+3Vgs9NXkUDpjRwbN51LOupwZi9EKw0KWXdla8akDt5cM/4TANRDc7BnabPu6v8+5x/hJrKSTa4r9aSZJKJEH4zDRsIVEieSNlcipiDo7b2SbgU8wWAYX3FkTTSxGgN4EmdF8n8z7ixnLkRmbDzT56lacGw==; _abck=A5F9736B10F9907D1475A92B6AB4F3A2~0~YAAQV7csMSIjIR+VAQAAmniDKQ2N30w00kAxC/s18HyuKyAcNHzaO/GGP2/yrI0MzIEKJ2rl98pbJdn3Ivj1DFdbDEwaSap7+4ET6PSFfut0hFhGF56/N9uDKv6WfVnZ6AanyHp9pvvouckJNYpMCtMaiyLX7SiHqGjWvpTFxjtItJMzdzwmgilmhi9cyHu1hczSOjhmx0+v5jvFVzsSaHz48fZjpLf9UwGK/yf2z8xBzyqZxpqqnjkMlr9V8qkfTO3zAvu5+NB+7dQggee8WgSMYogc23KXjnovDQGvVbOqx/tGZ6iFNA5Bz254lqV0qz5rs+zHjLycncLZnbA1BXQEwAFn+E7K+oRWD6knVqQNfgyflOyBxZaU5aBUe2yzu0UDsqwbrs4Qn3SUYDih16sX8FGZFNQLZE9C+24NSQnIgTcmfHojzxFDcY2j24yBz9cHDiGsuaKzzl2XfjMobz9xZasc8zafruDhNLsK8Q9dbe0leCy/kfknfwM1sw==~-1~||0||~-1; bm_sz=04E626ECEE5B7878D868F18193E70B6A~YAAQV7csMSMjIR+VAQAAmniDKRokVUzBDan9z9ANlgNfGmDuFZ5J91zQ4Oo3p3nmCIYmRAZVmuLX7O9TYqmgIth+LAUbce0oL4Ni8EgMPSjFGkYpGzIJFLNxACWQeJJJ9EkRuhWiKzugf9P1RYl0quB2vz17Tt921Reuv1Dy5DE9NStuqr9euoBR+e2N23/5b7GJXpUOfiuM/SuXOX5EFqFVasCenW5HLu7ArGD3poP+eK8vobt6rZWKHENEeaFKEBGK1pAgw70Rfqqf/+fjLtgmsfn5aoXgR+KsbOgZ7u19JXvjCNFmmOr/N0tAlYL7OyyktTcwlaYqVRNQVnwbb5Se0/sVr7Jy7Owa1vXH6rDn8kvH7lFLE86+qUJDrMlb4xsdM9YK22tSJsUwGM+PWTCZN7zTSw==~3490627~3294006; RT="z=1&dm=nseindia.com&si=c5d057f6-4813-4a60-8450-4a50e97b4c15&ss=m7f1a7cx&sl=0&se=8c&tt=0&bcn=%2F%2F684d0d47.akstat.io%2F"; bm_sv=566AF526D2B6E20892B3A75B751C773D~YAAQ9cYsMfmQth6VAQAAnhGJKRrsLQC8fzCIS9PPS+x+0+M903LvfptqJ5oCJWvq0KcugkxHqgFYjor0ktUNn/Ob1ZcaBZBMuBsFZRWBWemNZy1ElBlbhQpvD8EjZmsIzCQsngm3g4erGtvyfqYxQXpYYfaL5XGRt88muiy1UdjkmHbol3323cZALcKbqD9/s6mSfGG5e3Bh9K2ZEBiKTqUQk8hB9zHde/SA48GNLQdjg/cvZfR4V6NzZ6ocYtrZc6B5~1"
-            },
-            timeout: 20000,
-        });
-
-        if (!response.ok) {
-            return res.status(response.status).json({ 
-                error: "Failed to fetch data from NSE API", 
-                status: response.status, 
-                message: `HTTP Error: ${response.statusText}` 
-            });
-        }
-
-        const data = await response.json();
-
-        if (!data || !data['NIFTY'] || !data['NIFTY'].data) {
-            return res.status(500).json({ 
-                error: "Invalid data structure from NSE API", 
-                message: "The response format does not match the expected structure" 
-            });
-        }
-
-        const stockData = data['NIFTY'].data;
-        if (!Array.isArray(stockData)) {
-            return res.status(500).json({ 
-                error: "Unexpected data format", 
-                message: "Expected an array but received a different structure" 
-            });
-        }
-
-        const sortedData = stockData.sort((a, b) => b.perChange - a.perChange);
-        console.log(sortedData);
-
-        res.json(sortedData.slice(0, count));
-    } catch (error) {
-        console.error("Error fetching data:", error.message);
-        res.status(500).json({ 
-            error: "Failed to fetch data", 
-            details: error.message 
-        });
-    }
-});
 
 
 module.exports = allroutes;
