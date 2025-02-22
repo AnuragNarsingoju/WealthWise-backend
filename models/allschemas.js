@@ -1,23 +1,46 @@
 let mongoose = require('mongoose');
 
-let signup = new mongoose.Schema({
-    "name": String,
-    "phone": String,
-    "email": {
-        type: String,
-        unique: true
-    },
-    "password": String,
-    "profile": String,
-    "count": Number,
-    "balance": { type: Number, default: 3000 },
-    "pvalue": { type: Number, default: 0 },
-    "stocks": [{
-        symbol: String,
-        boughtPrice: Number
-    }]
+// let signup = new mongoose.Schema({
+//     "name": String,
+//     "phone": String,
+//     "email": {
+//         type: String,
+//         unique: true
+//     },
+//     "password": String,
+//     "profile": String,
+//     "count": Number,
+//     "balance": { type: Number, default: 3000 },
+    
+//     "pvalue": { type: Number, default: 0 },
+//     "stocks": [{
+//         symbol: String,
+//         boughtPrice: Number,
+//         quantity: Number
+//     }]
+// }, {
+//     timestamps: true 
+// });
+
+
+const StockSchema = new mongoose.Schema({
+    symbol: { type: String, required: true },
+    boughtPrice: { type: Number, required: true },
+    quantity: { type: Number, required: true }
+});
+
+const signup = new mongoose.Schema({
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
+    profile: { type: String },
+    count: { type: Number, default: 0 },
+    balance: { type: Number, default: 3000 },
+    pvalue: { type: Number, default: 0 },
+    stocks: [StockSchema]
 }, {
-    timestamps: true 
+    timestamps: true
 });
 
 
