@@ -16,7 +16,6 @@ require('dotenv').config();
 const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
 const cron = require('node-cron');
-const yahooFinance = require('yahoo-finance2').default;
 
 cron.schedule('0 0 1 * *', async () => {
   try {
@@ -187,6 +186,7 @@ async function chat(Question) {
       question: Question,
       context: topDocuments
     });
+    //console.log(finalPrompt)
     const outputParser = new StringOutputParser();
     const finalOutput = await outputParser.parse(await llm.invoke(finalPrompt));
     return finalOutput.content;
