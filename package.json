@@ -34,6 +34,7 @@
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.0",
-    "pinecone": "^0.1.0"
+    "pinecone": "^0.1.0",
+    "yahoo-finance2": "^2.13.3"
   }
 }
