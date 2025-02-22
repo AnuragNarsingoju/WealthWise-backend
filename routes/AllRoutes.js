@@ -1169,6 +1169,167 @@ allroutes.get("/nifty", async (req, res) => {
     }
   });
 
+allroutes.get("/getbalance", async (req, res) => {
+  try {
+    const { userId } = req.query;
+    // console.log(userId);
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+    const user = await Signup.findOne({ email: userId });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Error fetching balance:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+allroutes.post("/addstock", async (req, res) => {
+  try {
+    const { email, stocks } = req.body;
+    const user = await signupModel.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.stocks.push(...stocks);
+    await user.save();
+    res.status(200).json({ message: "Stocks added successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+allroutes.delete("/deletestock", async (req, res) => {
+  try {
+    const { email, symbol } = req.body;
+    const user = await signupModel.find({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.stocks = user.stocks.filter((stock) => stock.symbol !== symbol);
+    await user.save();
+    res.status(200).json({ message: "Stock deleted successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+allroutes.get("/getstocks", async (req, res) => {
+  try {
+    const { email } = req.query;
+    console.log("email", email);
+    const user = await Signup.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    console.log("user", user);
+    res.status(200).json({
+      balance: user.balance,
+      stocks: user.stocks,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+allroutes.put("/updatebalance", async (req, res) => {
+  try {
+    const { email, balance } = req.body;
+    let user = await signupModel.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    user.balance = balance;
+    await user.save();
+    res.status(200).json({ message: "Balance updated successfully", user });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+allroutes.get("/getvalue", async (req, res) => {
+  try {
+    const { email } = req.query;
+    let user = await Signup.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    let sum = 0;
+    const stocks = user.stocks;
+    for (let i = 0; i < stocks.length; i++) {
+      const quote = await yahooFinance.quote(stocks[i].symbol);
+      sum += quote.regularMarketPrice;
+    }
+    sum = parseFloat(sum.toFixed(2));
+    user.pvalue = sum;
+    await user.save();
+    res.status(200).json({
+      amount: sum,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+allroutes.get("/portfolio-profit-loss", async (req, res) => {
+  try {
+    const { email } = req.query;
+    const user = await Signup.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    let totalProfitOrLoss = 0;
+    let stockDetails = [];
+    for (let stock of user.stocks) {
+      const { symbol, boughtPrice, quantity } = stock;
+      const quote = await yahooFinance.quote(symbol);
+      const currentPrice = quote.regularMarketPrice;
+
+      const profitOrLoss = (currentPrice - boughtPrice) * quantity;
+      totalProfitOrLoss += profitOrLoss;
+
+      stockDetails.push({
+        symbol,
+        boughtPrice,
+        currentPrice,
+        quantity,
+        profitOrLoss: parseFloat(profitOrLoss.toFixed(2)),
+      });
+    }
+    res.status(200).json({
+      stocks: stockDetails,
+      totalProfitOrLoss: parseFloat(totalProfitOrLoss.toFixed(2)),
+    });
+  } catch (error) {
+    console.error("Error fetching stock data:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+const yahooFinance = require("yahoo-finance2").default;
+allroutes.get("/stock-price", async (req, res) => {
+  try {
+    const { tickers } = req.body;
+    const prices = [];
+    for (let i = 0; i < tickers.length; i++) {
+      const quote = await yahooFinance.quote(tickers[i]);
+      console.log(
+        `Current price of ${tickers[i]}: ₹${quote.regularMarketPrice}`
+      );
+      prices.push(quote.regularMarketPrice);
+    }
+    res.json({ price: prices });
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
+
 
 
 module.exports = allroutes;
