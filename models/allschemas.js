@@ -30,10 +30,10 @@ const StockSchema = new mongoose.Schema({
 });
 
 const signup = new mongoose.Schema({
-    name: { type: String, required: true },
-    phone: { type: String, required: true },
+    name: { type: String},
+    phone: { type: String },
     email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
+    password: { type: String },
     profile: { type: String },
     count: { type: Number, default: 0 },
     balance: { type: Number, default: 3000 },
