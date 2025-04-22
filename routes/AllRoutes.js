@@ -1154,39 +1154,104 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
   }
 });
 
+// allroutes.get('/nifty50', async (req, res) => {
+//   const { count = 50 } = req.query;
+
+//   const baseURL = 'https://www.nseindia.com';
+//   const dataURL = `${baseURL}/api/equity-stockIndices?index=NIFTY%2050`;
+
+//  const headers = {
+//     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+//     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+//     'Accept-Language': 'en-US,en;q=0.9',
+//     'Referer': baseURL + '/',
+//     'Connection': 'keep-alive'
+//   };
+
+//   try {
+//     // First request to get cookies
+//     const init = await axios.get(baseURL, { headers });
+
+//     const cookies = init.headers['set-cookie'];
+//     if (!cookies) throw new Error('Failed to get cookies from NSE');
+
+//     const cookieHeader = cookies.map(c => c.split(';')[0]).join('; ');
+
+//     const response = await axios.get(dataURL, {
+//       headers: {
+//         ...headers,
+//         Cookie: cookieHeader,
+//         'X-Requested-With': 'XMLHttpRequest' 
+//       }
+//     });
+
+//     const stocks = response.data.data;
+
+//     const topStocks = stocks.map(stock => ({
+//       symbol: stock.symbol,
+//       lastPrice: stock.lastPrice,
+//       change: stock.change,
+//       percentChange: stock.pChange,
+//       high: stock.dayHigh,
+//       low: stock.dayLow,
+//       previousClose: stock.previousClose
+//     }));
+
+//     res.json(topStocks.slice(0, parseInt(count)));
+//   } catch (error) {
+//     console.error('NIFTY 50 fetch error:', error.message);
+//     res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
+//   }
+// });
+
+
 allroutes.get('/nifty50', async (req, res) => {
   const { count = 50 } = req.query;
-
   const baseURL = 'https://www.nseindia.com';
   const dataURL = `${baseURL}/api/equity-stockIndices?index=NIFTY%2050`;
-
- const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
+    'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': baseURL + '/',
-    'Connection': 'keep-alive'
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Referer': `${baseURL}/`,
+    'Connection': 'keep-alive',
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache'
   };
 
   try {
+    // Use a more resilient approach for cookie handling
+    const cookieJar = {};
+    
     // First request to get cookies
-    const init = await axios.get(baseURL, { headers });
-
-    const cookies = init.headers['set-cookie'];
-    if (!cookies) throw new Error('Failed to get cookies from NSE');
-
-    const cookieHeader = cookies.map(c => c.split(';')[0]).join('; ');
-
-    const response = await axios.get(dataURL, {
-      headers: {
-        ...headers,
-        Cookie: cookieHeader,
-        'X-Requested-With': 'XMLHttpRequest' 
-      }
+    const init = await axios.get(baseURL, { 
+      headers,
+      timeout: 10000 // Add timeout to prevent hanging requests
     });
-
+    
+    if (init.headers['set-cookie']) {
+      const cookies = init.headers['set-cookie'];
+      const cookieHeader = cookies.map(c => c.split(';')[0]).join('; ');
+      headers.Cookie = cookieHeader;
+    }
+    
+    // Add X-Requested-With header for the API request
+    headers['X-Requested-With'] = 'XMLHttpRequest';
+    
+    // Make the data request with a short delay
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const response = await axios.get(dataURL, {
+      headers,
+      timeout: 10000
+    });
+    
+    if (!response.data || !response.data.data) {
+      throw new Error('Invalid data structure received from NSE');
+    }
+    
     const stocks = response.data.data;
-
     const topStocks = stocks.map(stock => ({
       symbol: stock.symbol,
       lastPrice: stock.lastPrice,
@@ -1196,14 +1261,20 @@ allroutes.get('/nifty50', async (req, res) => {
       low: stock.dayLow,
       previousClose: stock.previousClose
     }));
-
+    
     res.json(topStocks.slice(0, parseInt(count)));
   } catch (error) {
     console.error('NIFTY 50 fetch error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
+    
+    // More detailed error response
+    res.status(500).json({ 
+      error: 'Failed to fetch NIFTY 50 stocks',
+      message: error.message,
+      // Don't include the full error stack in production
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
-
 
 // allroutes.get('/nifty50', async (req, res) => {
 //   const { count = 50 } = req.query;
