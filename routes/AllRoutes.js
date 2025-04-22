@@ -1226,8 +1226,7 @@ allroutes.get('/nifty50', async (req, res) => {
     
     // First request to get cookies
     const init = await axios.get(baseURL, { 
-      headers,
-      timeout: 10000 // Add timeout to prevent hanging requests
+      headers
     });
     
     if (init.headers['set-cookie']) {
@@ -1243,8 +1242,7 @@ allroutes.get('/nifty50', async (req, res) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     const response = await axios.get(dataURL, {
-      headers,
-      timeout: 10000
+      headers
     });
     
     if (!response.data || !response.data.data) {
