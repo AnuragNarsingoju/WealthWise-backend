@@ -1205,51 +1205,25 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
 // });
 
 
+
+
 allroutes.get('/nifty50', async (req, res) => {
   const { count = 50 } = req.query;
-  const baseURL = 'https://www.nseindia.com';
-  const dataURL = `${baseURL}/api/equity-stockIndices?index=NIFTY%2050`;
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
-    'Accept': 'application/json, text/plain, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Referer': `${baseURL}/`,
-    'Connection': 'keep-alive',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
-  };
+
+  const apiKey = '1ab91e4508f39bfd5d8ec936403a3940';
+  const targetUrl = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
 
   try {
-    // Use a more resilient approach for cookie handling
-    const cookieJar = {};
-    
-    // First request to get cookies
-    const init = await axios.get(baseURL, { 
-      headers
+    // Use ScraperAPI to fetch data
+    const response = await axios.get(`http://api.scraperapi.com`, {
+      params: {
+        api_key: apiKey,
+        url: targetUrl
+      }
     });
-    
-    if (init.headers['set-cookie']) {
-      const cookies = init.headers['set-cookie'];
-      const cookieHeader = cookies.map(c => c.split(';')[0]).join('; ');
-      headers.Cookie = cookieHeader;
-    }
-    
-    // Add X-Requested-With header for the API request
-    headers['X-Requested-With'] = 'XMLHttpRequest';
-    
-    // Make the data request with a short delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const response = await axios.get(dataURL, {
-      headers
-    });
-    
-    if (!response.data || !response.data.data) {
-      throw new Error('Invalid data structure received from NSE');
-    }
-    
+
     const stocks = response.data.data;
+
     const topStocks = stocks.map(stock => ({
       symbol: stock.symbol,
       lastPrice: stock.lastPrice,
@@ -1259,51 +1233,13 @@ allroutes.get('/nifty50', async (req, res) => {
       low: stock.dayLow,
       previousClose: stock.previousClose
     }));
-    
+
     res.json(topStocks.slice(0, parseInt(count)));
   } catch (error) {
-    console.error('NIFTY 50 fetch error:', error.message);
-  
-    res.status(500).json({ 
-      error: 'Failed to fetch NIFTY 50 stocks',
-      message: error.message,
-    });
+    console.error('Scraping error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
   }
 });
-
-// allroutes.get('/nifty50', async (req, res) => {
-//   const { count = 50 } = req.query;
-
-//   const apiKey = '1ab91e4508f39bfd5d8ec936403a3940';
-//   const targetUrl = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
-
-//   try {
-//     // Use ScraperAPI to fetch data
-//     const response = await axios.get(`http://api.scraperapi.com`, {
-//       params: {
-//         api_key: apiKey,
-//         url: targetUrl
-//       }
-//     });
-
-//     const stocks = response.data.data;
-
-//     const topStocks = stocks.map(stock => ({
-//       symbol: stock.symbol,
-//       lastPrice: stock.lastPrice,
-//       change: stock.change,
-//       percentChange: stock.pChange,
-//       high: stock.dayHigh,
-//       low: stock.dayLow,
-//       previousClose: stock.previousClose
-//     }));
-
-//     res.json(topStocks.slice(0, parseInt(count)));
-//   } catch (error) {
-//     console.error('Scraping error:', error.message);
-//     res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
-//   }
-// });
 
 allroutes.get("/getbalance", async (req, res) => {
   try {
