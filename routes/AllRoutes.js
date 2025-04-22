@@ -1265,13 +1265,10 @@ allroutes.get('/nifty50', async (req, res) => {
     res.json(topStocks.slice(0, parseInt(count)));
   } catch (error) {
     console.error('NIFTY 50 fetch error:', error.message);
-    
-    // More detailed error response
+  
     res.status(500).json({ 
       error: 'Failed to fetch NIFTY 50 stocks',
       message: error.message,
-      // Don't include the full error stack in production
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
