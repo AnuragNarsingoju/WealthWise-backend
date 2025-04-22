@@ -1160,11 +1160,11 @@ allroutes.get('/nifty50', async (req, res) => {
   const baseURL = 'https://www.nseindia.com';
   const dataURL = `${baseURL}/api/equity-stockIndices?index=NIFTY%2050`;
 
-  const headers = {
+ const headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-    'Accept': '*/*',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Referer': 'https://www.nseindia.com/',
+    'Referer': baseURL + '/',
     'Connection': 'keep-alive'
   };
 
@@ -1180,7 +1180,8 @@ allroutes.get('/nifty50', async (req, res) => {
     const response = await axios.get(dataURL, {
       headers: {
         ...headers,
-        Cookie: cookieHeader
+        Cookie: cookieHeader,
+        'X-Requested-With': 'XMLHttpRequest' 
       }
     });
 
