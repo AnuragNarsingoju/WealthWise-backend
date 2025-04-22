@@ -1199,6 +1199,39 @@ allroutes.get("/getbalance", async (req, res) => {
   }
 });
 
+
+allroutes.get('/nifty50', async (req, res) => {
+  const { count } = req.query;
+  const url = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Referer': 'https://www.nseindia.com/market-data/live-equity-market'
+  };
+
+  const session = axios.create({ headers });
+  try {
+    await session.get('https://www.nseindia.com');
+    const response = await session.get(url);
+    const stocks = response.data.data;
+
+    const top50 = stocks.map(stock => ({
+      symbol: stock.symbol,
+      lastPrice: stock.lastPrice,
+      change: stock.change,
+      percentChange: stock.pChange,
+      high: stock.dayHigh,
+      low: stock.dayLow,
+      previousClose: stock.previousClose
+    }));
+
+    res.json(top50.slice(0, count));
+  } catch (error) {
+    console.error('NIFTY 50 fetch error:', error.message);
+    res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
+  }
+});
+
 allroutes.post("/addstock", async (req, res) => {
   try {
     const { email, stocks } = req.body;
