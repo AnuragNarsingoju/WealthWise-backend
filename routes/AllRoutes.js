@@ -1207,39 +1207,39 @@ allroutes.post('/PersonalizedStocks', async (req, res) => {
 
 
 
-allroutes.get('/nifty50', async (req, res) => {
-  const { count = 50 } = req.query;
+// allroutes.get('/nifty50', async (req, res) => {
+//   const { count = 50 } = req.query;
 
-  const apiKey = '1ab91e4508f39bfd5d8ec936403a3940';
-  const targetUrl = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
+//   const apiKey = '1ab91e4508f39bfd5d8ec936403a3940';
+//   const targetUrl = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
 
-  try {
-    // Use ScraperAPI to fetch data
-    const response = await axios.get(`http://api.scraperapi.com`, {
-      params: {
-        api_key: apiKey,
-        url: targetUrl
-      }
-    });
+//   try {
+//     // Use ScraperAPI to fetch data
+//     const response = await axios.get(`http://api.scraperapi.com`, {
+//       params: {
+//         api_key: apiKey,
+//         url: targetUrl
+//       }
+//     });
 
-    const stocks = response.data.data;
+//     const stocks = response.data.data;
 
-    const topStocks = stocks.map(stock => ({
-      symbol: stock.symbol,
-      lastPrice: stock.lastPrice,
-      change: stock.change,
-      percentChange: stock.pChange,
-      high: stock.dayHigh,
-      low: stock.dayLow,
-      previousClose: stock.previousClose
-    }));
+//     const topStocks = stocks.map(stock => ({
+//       symbol: stock.symbol,
+//       lastPrice: stock.lastPrice,
+//       change: stock.change,
+//       percentChange: stock.pChange,
+//       high: stock.dayHigh,
+//       low: stock.dayLow,
+//       previousClose: stock.previousClose
+//     }));
 
-    res.json(topStocks.slice(0, parseInt(count)));
-  } catch (error) {
-    console.error('Scraping error:', error.message);
-    res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
-  }
-});
+//     res.json(topStocks.slice(0, parseInt(count)));
+//   } catch (error) {
+//     console.error('Scraping error:', error.message);
+//     res.status(500).json({ error: 'Failed to fetch NIFTY 50 stocks' });
+//   }
+// });
 
 allroutes.get("/getbalance", async (req, res) => {
   try {
