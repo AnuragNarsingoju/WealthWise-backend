@@ -10,7 +10,7 @@ const jwt = require('jsonwebtoken');
 const CryptoJS = require('crypto-js');
 
 const corsOptions = {
-    origin: ['https://wealthwisee.vercel.app','https://wealthwisee.live'],
+    origin: ['https://wealthwisee.vercel.app','https://wealthwisee.live','https://www.wealthwisee.live'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
@@ -19,7 +19,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const validateOrigin = (req, res, next) => {
-    const allowedOrigins = ['https://wealthwisee.vercel.app','https://wealthwisee.live'];
+    const allowedOrigins = ['https://wealthwisee.vercel.app','https://wealthwisee.live','https://www.wealthwisee.live'];
     if (!allowedOrigins.includes(req.headers.origin)) {
         return res.status(403).json({ error: 'Unauthorized request' });
     }
