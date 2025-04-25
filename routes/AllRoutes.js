@@ -1297,88 +1297,116 @@ allroutes.get("/getbalance", async (req, res) => {
 
 allroutes.get('/nifty50', async (req, res) => {
   const { count = 50 } = req.query;
-  const url = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
+  const parsedCount = parseInt(count) || 50;
+  
+  // Define browser-like headers
   const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Encoding': 'gzip, deflate, br',
     'Accept-Language': 'en-US,en;q=0.9',
-    'Accept': 'application/json, text/plain, */*',
-    'Referer': 'https://www.nseindia.com/market-data/live-equity-market',
-    'Cookie': ''
+    'Connection': 'keep-alive',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    'Upgrade-Insecure-Requests': '1',
+    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'Cache-Control': 'max-age=0'
   };
 
-  const session = axios.create({ 
-    headers,
-    timeout: 10000, // Setting a timeout
-    withCredentials: true
-  });
-
   try {
-    // First visit the main page to get cookies
-    const mainPageResponse = await session.get('https://www.nseindia.com', {
+    // Create an axios instance that maintains cookies
+    const axiosInstance = axios.create({
+      withCredentials: true,
+      headers: headers,
+      timeout: 30000, // Increased timeout for Vercel
       maxRedirects: 5
     });
-    
-    // Extract cookies from response and add them to subsequent requests
-    const cookies = mainPageResponse.headers['set-cookie'];
-    if (cookies) {
-      headers.Cookie = cookies.join('; ');
+
+    // Step 1: Visit the main page first to get cookies
+    console.log('Visiting NSE main page to get cookies...');
+    const mainResponse = await axiosInstance.get('https://www.nseindia.com/', {
+      headers: {
+        ...headers,
+        'Referer': 'https://www.google.com/'
+      }
+    });
+
+    // Extract and process cookies
+    let cookies = '';
+    if (mainResponse.headers['set-cookie']) {
+      cookies = mainResponse.headers['set-cookie'].join('; ');
+      console.log('Cookies obtained successfully');
+    } else {
+      console.log('No cookies received from main page');
     }
+
+    // Step 2: Visit the equity market page to establish session context
+    console.log('Visiting equity market page...');
+    await axiosInstance.get('https://www.nseindia.com/market-data/live-equity-market', {
+      headers: {
+        ...headers,
+        'Cookie': cookies,
+        'Referer': 'https://www.nseindia.com/'
+      }
+    });
     
-    // Add a small delay to avoid being flagged as a bot
+    // Add a short delay (1 second)
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Make the actual API request
-    const response = await session.get(url);
-    
-    if (!response.data || !response.data.data) {
-      console.error('Invalid response structure:', response.data);
-      return res.status(500).json({ error: 'Invalid response from NSE API' });
+
+    // Step 3: Request the actual API with established session
+    console.log('Requesting NIFTY 50 data...');
+    const apiResponse = await axiosInstance.get('https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050', {
+      headers: {
+        ...headers,
+        'Cookie': cookies,
+        'Referer': 'https://www.nseindia.com/market-data/live-equity-market',
+        'Accept': 'application/json, text/plain, */*',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    // Process and return the data
+    if (apiResponse.data && apiResponse.data.data) {
+      const stocks = apiResponse.data.data;
+      const formattedStocks = stocks.map(stock => ({
+        symbol: stock.symbol,
+        lastPrice: stock.lastPrice,
+        change: stock.change,
+        percentChange: stock.pChange,
+        high: stock.dayHigh,
+        low: stock.dayLow,
+        previousClose: stock.previousClose
+      }));
+      
+      return res.json(formattedStocks.slice(0, parsedCount));
+    } else {
+      console.error('Invalid API response structure:', apiResponse.data);
+      return res.status(500).json({ error: 'Invalid response structure from NSE API' });
     }
-    
-    const stocks = response.data.data;
-    const parsedCount = parseInt(count) || 50;
-    const limitedCount = Math.min(parsedCount, stocks.length);
-    
-    const top50 = stocks.map(stock => ({
-      symbol: stock.symbol,
-      lastPrice: stock.lastPrice,
-      change: stock.change,
-      percentChange: stock.pChange,
-      high: stock.dayHigh,
-      low: stock.dayLow,
-      previousClose: stock.previousClose
-    }));
-    
-    res.json(top50.slice(0, limitedCount));
   } catch (error) {
     console.error('NIFTY 50 fetch error:', error.message);
     
-    // More specific error handling
+    // Enhanced error logging
     if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      console.error('Error data:', error.response.data);
-      console.error('Error status:', error.response.status);
-      res.status(error.response.status).json({ 
-        error: `NSE API responded with status ${error.response.status}`,
-        message: 'Failed to fetch NIFTY 50 stocks'
-      });
+      console.error(`Response status: ${error.response.status}`);
+      console.error('Response headers:', JSON.stringify(error.response.headers));
+      console.error('Response data:', JSON.stringify(error.response.data));
     } else if (error.request) {
-      // The request was made but no response was received
-      console.error('No response received');
-      res.status(504).json({ 
-        error: 'Gateway Timeout', 
-        message: 'NSE API did not respond'
-      });
-    } else {
-      // Something happened in setting up the request that triggered an error
-      res.status(500).json({ 
-        error: 'Internal Server Error', 
-        message: 'Failed to fetch NIFTY 50 stocks'
-      });
+      console.error('No response received from request');
     }
+    
+    res.status(503).json({ 
+      error: 'Service Unavailable', 
+      message: 'Failed to fetch NIFTY 50 stocks. Please try again later.' 
+    });
   }
 });
+
+
 
 allroutes.post("/addstock", async (req, res) => {
   try {
