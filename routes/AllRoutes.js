@@ -16,6 +16,8 @@ require('dotenv').config();
 const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
 const cron = require('node-cron');
+const cheerio = require('cheerio');
+
 
 cron.schedule('0 0 1 * *', async () => {
   try {
@@ -1296,113 +1298,42 @@ allroutes.get("/getbalance", async (req, res) => {
 
 
 allroutes.get('/nifty50', async (req, res) => {
-  const { count = 50 } = req.query;
-  const parsedCount = parseInt(count) || 50;
-  
-  // Define browser-like headers
-  const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Connection': 'keep-alive',
-    'Sec-Fetch-Dest': 'document',
-    'Sec-Fetch-Mode': 'navigate',
-    'Sec-Fetch-Site': 'none',
-    'Sec-Fetch-User': '?1',
-    'Upgrade-Insecure-Requests': '1',
-    'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'Cache-Control': 'max-age=0'
-  };
-
   try {
-    // Create an axios instance that maintains cookies
-    const axiosInstance = axios.create({
-      withCredentials: true,
-      headers: headers,
-      timeout: 30000, // Increased timeout for Vercel
-      maxRedirects: 5
+    const { data: html } = await axios.get('https://www.moneyworks4me.com/best-index/nse-stocks/top-nifty-50-companies-list/');
+    const $ = cheerio.load(html);
+
+    const top50 = [];
+
+    $('tr.table-content').each((_, row) => {
+      const cols = $(row).find('td');
+
+      const companyName = $(cols[1]).find('a').text().trim();
+      const lastPrice = parseFloat($(cols[2]).text().replace(/,/g, ''));
+      const percentChangeText = $(cols[3]).text().trim();
+      const percentChange = percentChangeText ? parseFloat(percentChangeText.replace('%', '')) : undefined;
+
+      const highText = $(cols[5]).text().split('\n')[0].trim();
+      const lowText = $(cols[6]).text().split('\n')[0].trim();
+
+      // Infer symbol from company name or use slug if available
+      const symbol = companyName?.split(' ')[0].toUpperCase();
+
+      const stock = {
+        symbol,
+        lastPrice: isNaN(lastPrice) ? undefined : lastPrice,
+        percentChange: isNaN(percentChange) ? undefined : percentChange,
+        high: isNaN(parseFloat(highText)) ? undefined : parseFloat(highText),
+        low: isNaN(parseFloat(lowText)) ? undefined : parseFloat(lowText),
+      };
+
+      // Filter out undefined fields
+      top50.push(Object.fromEntries(Object.entries(stock).filter(([_, v]) => v !== undefined)));
     });
 
-    // Step 1: Visit the main page first to get cookies
-    console.log('Visiting NSE main page to get cookies...');
-    const mainResponse = await axiosInstance.get('https://www.nseindia.com/', {
-      headers: {
-        ...headers,
-        'Referer': 'https://www.google.com/'
-      }
-    });
-
-    // Extract and process cookies
-    let cookies = '';
-    if (mainResponse.headers['set-cookie']) {
-      cookies = mainResponse.headers['set-cookie'].join('; ');
-      console.log('Cookies obtained successfully');
-    } else {
-      console.log('No cookies received from main page');
-    }
-
-    // Step 2: Visit the equity market page to establish session context
-    console.log('Visiting equity market page...');
-    await axiosInstance.get('https://www.nseindia.com/market-data/live-equity-market', {
-      headers: {
-        ...headers,
-        'Cookie': cookies,
-        'Referer': 'https://www.nseindia.com/'
-      }
-    });
-    
-    // Add a short delay (1 second)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Step 3: Request the actual API with established session
-    console.log('Requesting NIFTY 50 data...');
-    const apiResponse = await axiosInstance.get('https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050', {
-      headers: {
-        ...headers,
-        'Cookie': cookies,
-        'Referer': 'https://www.nseindia.com/market-data/live-equity-market',
-        'Accept': 'application/json, text/plain, */*',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
-
-    // Process and return the data
-    if (apiResponse.data && apiResponse.data.data) {
-      const stocks = apiResponse.data.data;
-      const formattedStocks = stocks.map(stock => ({
-        symbol: stock.symbol,
-        lastPrice: stock.lastPrice,
-        change: stock.change,
-        percentChange: stock.pChange,
-        high: stock.dayHigh,
-        low: stock.dayLow,
-        previousClose: stock.previousClose
-      }));
-      
-      return res.json(formattedStocks.slice(0, parsedCount));
-    } else {
-      console.error('Invalid API response structure:', apiResponse.data);
-      return res.status(500).json({ error: 'Invalid response structure from NSE API' });
-    }
+    res.json(top50);
   } catch (error) {
-    console.error('NIFTY 50 fetch error:', error.message);
-    
-    // Enhanced error logging
-    if (error.response) {
-      console.error(`Response status: ${error.response.status}`);
-      console.error('Response headers:', JSON.stringify(error.response.headers));
-      console.error('Response data:', JSON.stringify(error.response.data));
-    } else if (error.request) {
-      console.error('No response received from request');
-    }
-    
-    res.status(503).json({ 
-      error: 'Service Unavailable', 
-      message: 'Failed to fetch NIFTY 50 stocks. Please try again later.' 
-    });
+    console.error('Error scraping Nifty 50 data:', error.message);
+    res.status(500).json({ error: 'Failed to fetch Nifty 50 data' });
   }
 });
 
