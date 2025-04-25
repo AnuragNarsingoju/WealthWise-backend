@@ -1295,7 +1295,7 @@ allroutes.get("/getbalance", async (req, res) => {
 // });
 
 
-router.get('/nifty50', async (req, res) => {
+allroutes.get('/nifty50', async (req, res) => {
   const { count = 50 } = req.query;
   const url = 'https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%2050';
   const headers = {
