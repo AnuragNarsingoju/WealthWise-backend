@@ -613,7 +613,7 @@ allroutes.post('/login', async (req, res) => {
            const { success, score, action } = response.data;
     
           if (success || score >= 0.5) {
-            const token = jwt.sign({ "email": email }, process.env.TOKEN, { expiresIn: '8h' });
+            const token = jwt.sign({ "email": email }, process.env.TOKEN);
             res.json({ token });
 
           } else {
