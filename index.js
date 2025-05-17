@@ -9,6 +9,7 @@ app.use(express.json());
 const jwt = require('jsonwebtoken');
 const CryptoJS = require('crypto-js');
 
+
 const corsOptions = {
     origin: ['https://wealthwisee.vercel.app','https://wealthwisee.live','https://www.wealthwisee.live'],
     credentials: true,
@@ -56,6 +57,8 @@ const db = async () => {
 db();
 
 app.use('/api', allroutes);
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 app.listen(5001, () => {
     console.log('Backend server listening at port 5001');
