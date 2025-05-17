@@ -27,7 +27,7 @@ const validateOrigin = (req, res, next) => {
 };
 
 const authenticateToken = (req, res, next) => {
-    if (req.path === '/api/login' || req.path === '/api/findmail' || req.path === '/api/signup' || req.path === '/api/nifty'  ) {
+    if (req.path === '/api/login' || req.path === '/api/findmail' || req.path === '/api/signup' || req.path === '/api/nifty' || req.path ==='/api/stock' || req.path ==='/api/portfolio' ) {
         return next();
     }
     const authHeader = req.headers['authorization'];
