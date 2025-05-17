@@ -17,6 +17,7 @@ const { Readable } = require("stream");
 const upload = multer({ storage: multer.memoryStorage() });
 const cron = require('node-cron');
 const cheerio = require('cheerio');
+const { NseIndia } = require("stock-nse-india");
 
 
 cron.schedule('0 0 1 * *', async () => {
